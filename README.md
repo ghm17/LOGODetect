@@ -9,7 +9,7 @@ First download LOGODetect and the corresponding data.
         
     git clone git@github.com:ghm17/LOGODetect.git
 
-All the following steps should be carried out in the `LOGODetect/` directory. Suppose we would like to find which part of the genome contributes to the genetic correlation between two diseases, e.g. bipolar disorder and schizophrenia. We need to prepare the following files:
+All the following steps should be carried out in the `LOGODetect/` directory! Suppose we would like to find which part of the genome contributes to the genetic correlation between two diseases, e.g. bipolar disorder and schizophrenia. We need to prepare the following files:
 * Two GWAS summary statistics files: We have prepared the example data for you (downloaded [here](https://www.cog-genomics.org/plink/1.9)). The GWAS summary statistics files need to be transformed into the standard format with the exact column names by yourself. The first few lines should look like this:
 
       head BIP.txt
@@ -43,7 +43,7 @@ The third line should be run for all chromosomes 1-22 (can be in parallel), and 
 The two arguments `BIP.txt` and `SCZ.txt` denote the location of two GWAS summary statistics files. This step performs quality control and outputs two summary stat files `Temp/Data_QC/dat1.txt` and `Temp/Data_QC/dat2.txt`.
 
 ### Step 2-Use ldsc to calculate heritability and genetic correlation of two traits
-This step follows the instruction of `ldsc` to estimate genetic correlation, details see [here](https://github.com/bulik/ldsc).   
+The two arguments `BIP.txt` and `SCZ.txt` denote the location of two GWAS summary statistics files. This step follows the instruction of `ldsc` to estimate genetic correlation, details see [here](https://github.com/bulik/ldsc).   
 
     mkdir Temp/ldsc
     source activate ldsc
