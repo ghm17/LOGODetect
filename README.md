@@ -10,7 +10,7 @@ First download LOGODetect and the corresponding data.
     git clone git@github.com:ghm17/LOGODetect.git
 
 All the following steps should be carried out in the `LOGODetect/` directory! Suppose we would like to find which part of the genome contributes to the genetic correlation between two diseases, e.g. bipolar disorder and schizophrenia. We need to prepare the following files:
-* Two GWAS summary statistics files: We have prepared the example data for you (downloaded [here](https://www.cog-genomics.org/plink/1.9)). The GWAS summary statistics files need to be transformed into the standard format with the exact column names by yourself. The first few lines should look like this:
+* Two GWAS summary statistics files: We have prepared the example data for you in the directory `LOGODetect/BIP.txt` and `LOGODetect/SCZ.txt`. The GWAS summary statistics files need to be transformed into the standard format with the exact column names by yourself. The first few lines should look like this:
 
       head BIP.txt
       
