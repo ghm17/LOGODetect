@@ -34,7 +34,7 @@ If this is the first time you use LOGODetect, run the following commands:
     Rscript Code/random_generation.R chr
     Rscript Code/aggregation.R chr
 
-The third line should be run for all chromosomes 1-22 (can be in parallel), and so the fourth line. This step will generate random vectors which are needed in calculating the scan statistic null distribution. In particular, running the second and third line cost much memory and time, but it only needs to run for one time!
+The third line should be run for all chromosomes 1-22 (can be in parallel), and so the fourth line. This step will generate random vectors which are needed in calculating the scan statistic null distribution. In particular, running the third and fourth line cost much memory and time, but it only needs to run for one time!
 
 ### Step 1-Data preprocessing
         
