@@ -9,8 +9,8 @@ First download LOGODetect and the corresponding data.
         
     git clone git@github.com:ghm17/LOGODetect.git
 
-All the following steps should be carried out in the `LOGODetect/` directory! Suppose we would like to find which part of the genome contributes to the genetic correlation between two diseases, e.g. bipolar disorder and schizophrenia. We need to prepare the following files:
-* Two GWAS summary statistics files: We have prepared the example data for you in the directory `LOGODetect/BIP.txt` and `LOGODetect/SCZ.txt`. The GWAS summary statistics files need to be transformed into the standard format with the exact column names by yourself. The first few lines should look like this:
+**All the following steps should be carried out under the `./LOGODetect` directory!** Suppose we would like to find which part of the genome contributes to the genetic correlation between two diseases, e.g. bipolar disorder and schizophrenia. We need to prepare the following files:
+* Two GWAS summary statistics files: We have prepared the example data for you in the directory `./example/BIP.txt.gz` and `./example/SCZ.txt.gz`. The GWAS summary statistics files need to be transformed into the standard format with the exact column names by yourself. The first few lines should look like this:
 
       head BIP.txt
       
@@ -23,56 +23,64 @@ All the following steps should be carried out in the `LOGODetect/` directory! Su
       1 rs6689308 1029805 A G 51710 -0.346923433004747 0.7273 0.160787159156836
 
 The column names here denote chromosome, SNP rs-ID, position, effect allele, non-effect allele, sample size, z-score, p-value and minor allele frequency respectively.
-* Plink bfiles of reference panel: These are files .bed/.bim/.fam format. We have already prepared these data (of EUR population from 1000 Genomes Project, with rare variants whose MAF < 1% filtered out) in directory `Data/LD_matrix`. In particular, the reference genotype data are partitioned into blocks, each block covers 1 centiMorgan(cM), and the Plink bfiles of every two adjacent blocks are provided. These data are used to approximate the LD matrix of the sample cohorts.
-* LD blocks partition: We have already prepared these data in directory `Data/LD_block`. It contains a file `ldblock_count.txt` recording the LD block counts for each chromosome, and 22 files `ldblock_merged_chr@.txt` recording LD blocks partitions, each line represent the start and stop position of each LD block. On average, each LD block covers about 15 Mb. We perform LOGODetect within each LD block, and then aggregate the result together to control for FDR.
+* Plink bfiles of reference panel: These are files .bed/.bim/.fam format. We have already prepared these data (of EUR population from 1000 Genomes Project, with rare variants whose MAF < 1% filtered out) in directory `./Data/LD_matrix`. In particular, the reference genotype data are partitioned into blocks, each block covers 1 centiMorgan(cM), and the Plink bfiles of every two adjacent blocks are provided. These data are used to approximate the LD matrix of the sample cohorts.
+* LD blocks partition: We have already prepared these data in directory `./Data/LD_block`. It contains a file `ldblock_count.txt` recording the LD block counts for each chromosome, and 22 files `ldblock_merged_chr@.txt` recording LD blocks partitions, each line represent the start and stop position of each LD block. On average, each LD block covers about 15 Mb. We perform LOGODetect within each LD block, and then aggregate the result together to control for FDR.
 
-### Step 0-Calculate LD matrix and random generation
+### Step 0-Calculate LD matrix
 If this is the first time you use LOGODetect, run the following commands:
     
+    cd ./LOGODetect
     mkdir Temp
-    source Code/calculateLD.txt  
-    Rscript Code/random_generation.R chr
-    Rscript Code/aggregation.R chr
+    source ./Code/calculateLD.txt  
+    for chr in $(seq 22)
+    do
+    	Rscript ./Code/random_vector_generation.R ${chr}
+    	Rscript ./Code/aggregation.R ${chr}
+    done
 
-The third line should be run for all chromosomes 1-22 (can be in parallel), and so the fourth line. This step will generate random vectors which are needed in calculating the scan statistic null distribution. In particular, running the third and fourth line cost much memory and time, but it only needs to run for one time!
+The `random_vector_generation.R` and `aggregation.R` should be run for all chromosomes 1-22 (can be run in parallel manually by yourself). This step will generate random vectors which are needed in calculating the scan statistic null distribution. In particular, this step cost much memory and time, but it only needs to be run for one time!
 
 ### Step 1-Data preprocessing
         
-    Rscript Code/preprocess.R BIP.txt SCZ.txt
+    cd ./LOGODetect
+    Rscript ./Code/preprocess.R BIP.txt SCZ.txt output_dir
 
-The two arguments `BIP.txt` and `SCZ.txt` denote the location of two GWAS summary statistics files. This step performs quality control and outputs two summary stat files `Temp/Data_QC/dat1.txt` and `Temp/Data_QC/dat2.txt`.
+The two arguments `BIP.txt` and `SCZ.txt` specify two input GWAS summary statistics files, the last argument `output_dir` specify the output directory. The argument `output_dir` should be kept consistent in the following steps. This step performs quality control and outputs two summary stat files for whole genome `output_dir/Data_QC/dat1.txt` and `output_dir/Data_QC/dat2.txt` and 44 summary stat files partitioned by chromosomes `output_dir/Data_QC/dat1_chr@.txt` and `output_dir/Data_QC/dat2_chr@.txt`.
 
 ### Step 2-Use ldsc to calculate heritability and genetic correlation of two traits
-The two arguments `BIP.txt` and `SCZ.txt` denote the location of two GWAS summary statistics files. This step follows the instruction of `ldsc` to estimate genetic correlation, details see [here](https://github.com/bulik/ldsc).   
+This step follows the instruction of `ldsc` to estimate genetic correlation, details see [here](https://github.com/bulik/ldsc).   
 
-    mkdir Temp/ldsc
+    mkdir output_dir/ldsc
     source activate ldsc
-    python Data/ldsc/munge_sumstats.py \
+    cd ./LOGODetect
+    python ./LOGODetect/Data/ldsc/munge_sumstats.py \
     --sumstats BIP.txt \
-    --out Temp/ldsc/dat1_reformated \
+    --out output_dir/ldsc/dat1_reformated \
     --merge-alleles Data/ldsc/w_hm3.snplist
 
-    python Data/ldsc/munge_sumstats.py \
+    python ./LOGODetect/Data/ldsc/munge_sumstats.py \
     --sumstats SCZ.txt \
-    --out Temp/ldsc/dat2_reformated \
+    --out output_dir/ldsc/dat2_reformated \
     --merge-alleles Data/ldsc/w_hm3.snplist
 
-    python Data/ldsc/ldsc.py \
-    --rg Temp/ldsc/dat1_reformated.sumstats.gz,Temp/ldsc/dat2_reformated.sumstats.gz \
-    --ref-ld-chr Data/ldsc/eur_w_ld_chr/baseline. \
-    --w-ld-chr Data/ldsc/weights_hm3_no_hla/weights. \
-    --out Temp/ldsc/ldsc_trait1_trait2
+    python ./LOGODetect/Data/ldsc/ldsc.py \
+    --rg output_dir/ldsc/dat1_reformated.sumstats.gz,output_dir/ldsc/dat2_reformated.sumstats.gz \
+    --ref-ld-chr ./LOGODetect/Data/ldsc/eur_w_ld_chr/baseline. \
+    --w-ld-chr ./LOGODetect/Data/ldsc/weights_hm3_no_hla/weights. \
+    --out output_dir/ldsc/ldsc_trait1_trait2
     source deactivate ldsc
 
 ### Step 3-Calculate the scan statistic distribution under the null
     
-    Rscript Code/BiScan_null.R chr N1 N2 
+    cd ./LOGODetect
+    Rscript ./LOGODetect/Code/BiScan_null.R chr N1 N2 output_dir
 
-The `N1` and `N2` arguments denote the sample sizes of two summary stat files. This line should be run for all chromosomes 1-22 (can be in parallel).
+The `N1` and `N2` arguments denote the sample sizes of two summary stat files. The `BiScan_null.R` should be run for all chromosomes 1-22 (It is highly recommended to run this in parallel manually by yourself). 
 
 ### Step 4-Identify small regions that harbor local genetic correlation
         
-    Rscript Code/BiScan.R
+    cd ./LOGODetect
+    Rscript ./LOGODetect/Code/BiScan.R output_dir
 
 ## Output
 After running all the above steps, LOGODetect outputs a whitespace-delimited text file, with each row representing one small segment and the columns as such:

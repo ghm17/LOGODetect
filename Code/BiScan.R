@@ -2,6 +2,7 @@ library(data.table)
 library(MASS)
 options(stringsAsFactors=F)
 args = commandArgs(trailingOnly=TRUE)
+dir_out = as.character(args[1])
 
 scan = function(z1, z2, ldsc, Cn, inter, le, ri, alpha){
   m = length(z1)
@@ -72,12 +73,15 @@ whole_scan = function(z1, z2, ldsc, Cn, inter, thre, le, ri, alpha){
 
 Cn = 2000
 inter = 20
-alpha = 1/2
+alpha = c(0.3, 0.35, 0.4, 0.45, 0.5, 0.55, 0.6, 0.65, 0.7)
 N = 5000   ##size of scan stat empirical distribution
 
-Result = as.data.frame(matrix(0, nrow = 1, ncol = 8))
-colnames(Result) = c('chr', 'begin', 'stop', 'count', 'stat', 'pval', 'begin_pos', 'stop_pos')
-Result = Result[-1, ]
+Result = list()
+for(j in 1:length(alpha)){
+  Result[[j]] = as.data.frame(matrix(0, nrow = 0, ncol = 9))
+  colnames(Result[[j]]) = c('chr', 'begin', 'stop', 'count', 'stat', 'pval', 'begin_pos', 'stop_pos', 'screening_frag')
+}
+
 dat_merge = list()
 Frag_count = rep(0, 22)
 for(ch in 1:22){
@@ -91,26 +95,34 @@ for(ch in 1:22){
   frag_count = Frag_count[ch]
   LDSC = read.table(paste0('Data/ldsc/l2/chr', ch, '.l2.ldscore'), header = T)
   ref_snp = LDSC$SNP
-  dat_snp = read.table(paste0('Temp/Data_QC/dat1_chr', ch, '.txt'))[, 1]
+  dat_snp = read.table(paste0(dir_out, '/Data_QC/dat1_chr', ch, '.txt'))[, 1]
   ldsc = LDSC$L2
   ind = ref_snp%in%dat_snp
   ldsc = ldsc[ind]
   M = length(dat_snp)
   for(i in 1:M) ldsc[i] = max(ldsc[i], 1)
-  dat1[[ch]] = read.table(paste0('Temp/Data_QC/dat1_chr', ch, '.txt'), header = T)
-  dat2[[ch]] = read.table(paste0('Temp/Data_QC/dat2_chr', ch, '.txt'), header = T)
+  dat1[[ch]] = read.table(paste0(dir_out, '/Data_QC/dat1_chr', ch, '.txt'), header = T)
+  dat2[[ch]] = read.table(paste0(dir_out, '/Data_QC/dat2_chr', ch, '.txt'), header = T)
   z1 = dat1[[ch]]$Z
   z2 = dat2[[ch]]$Z
-  Qmax = as.matrix(read.table(paste0('Temp/Qmax/Qmax_chr', ch, '.txt')))
+  Qmax = list()
+  for(j in 1:length(alpha)){
+    Qmax[[j]] = as.matrix(read.table(paste0(dir_out, '/Temp/Qmax/Qmax_chr', ch, '_alpha_', alpha[j], '.txt')))
+  }
   sd1_data = sqrt(mean(z1^2))
   sd2_data = sqrt(mean(z2^2))
-  sd1_generated = read.table(paste0('Temp/sd/sd1_chr', ch, '.txt'))[, 1]
-  sd2_generated = read.table(paste0('Temp/sd/sd2_chr', ch, '.txt'))[, 1]
+  sd1_generated = read.table(paste0(dir_out, '/Temp/sd/sd1_chr', ch, '.txt'))[, 1]
+  sd2_generated = read.table(paste0(dir_out, '/Temp/sd/sd2_chr', ch, '.txt'))[, 1]
   
-  q = rep(0, frag_count)
-  for(k in 1:frag_count){
-    Qmax[,k] = Qmax[,k]*(sd1_data * sd2_data)/(sd1_generated * sd2_generated)
-    q[k] = quantile(Qmax[,k], 0.95)
+  q = list()
+  Qmax_scaled = list()
+  for(j in 1:length(alpha)){
+    Qmax_scaled[[j]] = matrix(0, nrow = N, ncol = frag_count)
+    q[[j]] = rep(0, frag_count)
+    for(k in 1:frag_count){
+      Qmax_scaled[[j]][, k] = Qmax[[j]][, k]*(sd1_data * sd2_data)/(sd1_generated * sd2_generated)
+      q[[j]][k] = quantile(Qmax_scaled[[j]][,k], 0.95)
+    }
   }
   
   frag = matrix(0, nrow = frag_count, ncol = 2)
@@ -120,39 +132,49 @@ for(ch in 1:22){
     frag[k, 2] = max(which( dat1[[ch]]$pos <= dat_merge[[ch]][k, 2] ))
     ind_noninf[k] = is.finite(frag[k, 1]) & is.finite(frag[k, 2])
   }
-  for(k in c(1:frag_count)[as.logical(ind_noninf)]){
-    result = whole_scan(z1[frag[k,1]:frag[k,2]], z2[frag[k,1]:frag[k,2]], ldsc[frag[k,1]:frag[k,2]], Cn, inter, q[k], frag[k,1], frag[k,2], alpha)
-    detect = c()
-    if(length(result)>0){
-      for(i in 1:(length(result)/2)){
-        begin = result[[2*i]][1]
-        stop = result[[2*i]][2]
-        count = stop - begin + 1
-        stat = sum(z1[begin:stop]*z2[begin:stop])/(sum(ldsc[begin:stop]))^alpha
-        pval = (sum(abs(stat) < Qmax[,k]) + 1)/(N + 1)
-        begin_pos = round(dat1[[ch]]$pos[begin]/1000000, 3)
-        stop_pos = round(dat1[[ch]]$pos[stop]/1000000, 3)
-        detect_new = c(begin, stop, count, stat, pval, begin_pos, stop_pos)
-        detect = rbind(detect, detect_new)
+  for(j in 1:length(alpha)){
+    for(k in c(1:frag_count)[as.logical(ind_noninf)]){
+      result = whole_scan(z1[frag[k,1]:frag[k,2]], z2[frag[k,1]:frag[k,2]], ldsc[frag[k,1]:frag[k,2]], Cn, inter, q[[j]][k], frag[k,1], frag[k,2], alpha[j])
+      detect = c()
+      if(length(result)>0){
+        for(i in 1:(length(result)/2)){
+          begin = result[[2*i]][1]
+          stop = result[[2*i]][2]
+          count = stop - begin + 1
+          stat = sum(z1[begin:stop]*z2[begin:stop])/(sum(ldsc[begin:stop]))^alpha[j]
+          pval = (sum(abs(stat) < Qmax_scaled[[j]][,k]) + 1)/(N + 1)
+          begin_pos = round(dat1[[ch]]$pos[begin]/1000000, 3)
+          stop_pos = round(dat1[[ch]]$pos[stop]/1000000, 3)
+          detect_new = c(begin, stop, count, stat, pval, begin_pos, stop_pos)
+          detect = rbind(detect, detect_new)
+        }
+        detect = data.frame(rep(ch, length(result)/2), detect, rep(k, length(result)/2), row.names = NULL)
+        colnames(detect) = c('chr', 'begin', 'stop', 'count', 'stat', 'pval', 'begin_pos', 'stop_pos', 'screening_frag')
+        Result[[j]] = rbind(Result[[j]], detect)
       }
-      detect = data.frame(rep(ch, length(result)/2), detect, row.names = NULL)
-      colnames(detect) = c('chr', 'begin', 'stop', 'count', 'stat', 'pval', 'begin_pos', 'stop_pos')
-      Result = rbind(Result, detect)
     }
   }
 }
 
-
-Result = Result[order(Result$stat, decreasing = T),]
-Result = Result[order(Result$pval),]
-p_val = Result$pval
-BH = max(which(p_val<=0.05/testing_count*c(1:nrow(Result))))
-Result$testing_count = testing_count
-Result$qval = Result$pval * Result$testing_count / c(1:nrow(Result))
-if(BH>0){
-  write.table(Result[1:BH, c(1, 5, 6, 7, 8, 10)], 'Result.txt', row.names = F, col.names = T, quote = F)
-}
-if(BH<=0){
-  write.table('detect nothing', 'Result.txt', row.names = F, col.names = T, quote = F)
+for(j in 1:length(alpha)){
+  Result[[j]] = Result[[j]][order(Result[[j]]$stat, decreasing = T),]
+  Result[[j]] = Result[[j]][order(Result[[j]]$pval),]
+  Result[[j]]$testing_count = testing_count
+  n0 = nrow(Result[[j]])
+  if(n0>1){
+    for(i in 2:n0){
+      temp = Result[[j]][1:(i-1), ]
+      testing_add = (sum(temp$chr == Result[[j]]$chr[i] & temp$screening_frag == Result[[j]]$screening_frag[i]))>0
+      Result[[j]]$testing_count[i:n0] = Result[[j]]$testing_count[i:n0] + testing_add
+    }
+  }
+  
+  p_val = Result[[j]]$pval
+  BH = max(which(p_val<=0.05/Result[[j]]$testing_count*c(1:n0)))
+  Result[[j]]$qval = Result[[j]]$pval * Result[[j]]$testing_count / c(1:n0)
+  Result[[j]]$significant = 0
+  if(BH>0){
+    write.table(Result[[j]][1:BH, ], paste0(dir_out, '/Temp/Result_alpha_', alpha[j], '.txt'), col.names = T, row.names = F, quote = F)
+  }
 }
 

@@ -3,6 +3,7 @@ options(stringsAsFactors=F)
 args = commandArgs(trailingOnly=TRUE)
 dir1 = as.character(args[1])
 dir2 = as.character(args[2])
+dir_out = as.character(args[3])
 
 dat1 = as.data.frame(fread(dir1, header = T))
 dat2 = as.data.frame(fread(dir2, header = T))
@@ -76,11 +77,8 @@ dat2_final = NULL
 dat1_chr = list()
 dat2_chr = list()
 
-if(!dir.exists('Temp')){
-  dir.create('Temp')
-}
-if(!dir.exists('Temp/Data_QC')){
-  dir.create('Temp/Data_QC')
+if(!dir.exists(paste0(dir_out, '/Data_QC'))){
+  paste0(dir_out, '/Data_QC')
 }
 for(ch in 1:22){
   dat1_chr[[ch]] = dat1[dat1$chr==ch, ]
@@ -90,12 +88,11 @@ for(ch in 1:22){
   overlap_snp = snp[snp%in%ref_snp]
   dat1_chr[[ch]] = dat1_chr[[ch]][snp%in%ref_snp, ]
   dat2_chr[[ch]] = dat2_chr[[ch]][snp%in%ref_snp, ]
-  write.table(overlap_snp, paste0('Temp/Data_QC/dat_snp_chr', ch, '.txt'), row.names = F, col.names = F, quote = F)
-  write.table(dat1_chr[[ch]], paste0('Temp/Data_QC/dat1_chr', ch, '.txt'), row.names = F, col.names = T, quote = F)
-  write.table(dat2_chr[[ch]], paste0('Temp/Data_QC/dat2_chr', ch, '.txt'), row.names = F, col.names = T, quote = F)
+  write.table(dat1_chr[[ch]], paste0(dir_out, '/Data_QC/dat1_chr', ch, '.txt'), row.names = F, col.names = T, quote = F)
+  write.table(dat2_chr[[ch]], paste0(dir_out, '/Data_QC/dat2_chr', ch, '.txt'), row.names = F, col.names = T, quote = F)
   dat1_final = rbind(dat1_final, dat1_chr[[ch]])
   dat2_final = rbind(dat2_final, dat2_chr[[ch]])
 }
-write.table(dat1_final, paste0('Temp/Data_QC/dat1.txt'), row.names = F, col.names = T, quote = F)
-write.table(dat2_final, paste0('Temp/Data_QC/dat2.txt'), row.names = F, col.names = T, quote = F)
+write.table(dat1_final, paste0(dir_out, '/Data_QC/dat1.txt'), row.names = F, col.names = T, quote = F)
+write.table(dat2_final, paste0(dir_out, '/Data_QC/dat2.txt'), row.names = F, col.names = T, quote = F)
 

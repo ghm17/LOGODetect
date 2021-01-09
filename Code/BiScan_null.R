@@ -5,40 +5,35 @@ args = commandArgs(trailingOnly=TRUE)
 ch = as.numeric(args[1])
 n1 = as.numeric(args[2])  ##sample size for trait1
 n2 = as.numeric(args[3])  ##sample size for trait2
+dir_out = as.character(args[4])
 
 
 ################# Read ldsc results including heritability for two traits and intercept(explaining sample overlaps)
-Read = file('Temp/ldsc/ldsc_trait1_trait2.log', 'r')
+Read = file(paste0(dir_out, '/ldsc/ldsc_trait1_trait2.log'), 'r')
 line = readLines(Read, n = 34)
 line = readLines(Read, n = 1)
-h2_1 = strsplit(line, "  ")[[1]]
-if(length(h2_1)>22){
-  ind1 = which(h2_1 == '')
-  h2_1 = h2_1[-ind1]
-}
-if(ch>1) var.beta = as.numeric(h2_1[ch])
-if(ch==1) var.beta = as.numeric(strsplit(h2_1[1], " ")[[1]][4])
+line = gsub("   ", " ", line)
+line = gsub("  ", " ", line)
+line = strsplit(line, ':')[[1]][2]
+h2_1 = as.numeric(strsplit(line, " ")[[1]][2:23])
 line = readLines(Read, n = 15)
 line = readLines(Read, n = 1)
-h2_2 = strsplit(line, "  ")[[1]]
-if(length(h2_2)>22){
-  ind2 = which(h2_2 == '')
-  h2_2 = h2_2[-ind2]
-}
-if(ch>1) var.gamma = as.numeric(h2_2[ch])
-if(ch==1) var.gamma = as.numeric(strsplit(h2_2[1], " ")[[1]][4])
+line = gsub("   ", " ", line)
+line = gsub("  ", " ", line)
+line = strsplit(line, ':')[[1]][2]
+h2_2 = as.numeric(strsplit(line, " ")[[1]][2:23])
 line = readLines(Read, n = 21)
 line = readLines(Read, n = 1)
 intercept = as.numeric(strsplit(line, " ")[[1]][2])
 close(Read)
-var.beta = max(var.beta, 0)
-var.gamma = max(var.gamma, 0)
+var.beta = max(h2_1[ch], 0)
+var.gamma = max(h2_2[ch], 0)
 
 
 ##################################### BiScan null distribution
 LDSC = read.table(paste0('Data/ldsc/l2/chr', ch, '.l2.ldscore'), header = T)
 ref_snp = LDSC$SNP
-dat = read.table(paste0('Temp/Data_QC/dat1_chr', ch, '.txt'), header = T)
+dat = read.table(paste0(dir_out, '/Data_QC/dat1_chr', ch, '.txt'), header = T)
 dat_snp = dat$SNP ##snplist in the data of interest
 ldsc = LDSC$L2
 len = read.table(paste0('Data/LD_matrix/chr', ch, '/snplist/block_len.txt'))[, 1]  ##size for each block
@@ -100,11 +95,14 @@ scan = function(z1, z2, ldsc, Cn, inter, le, ri, alpha){
 ## change parameter
 Cn = 2000
 inter = 20
-alpha = 1/2
+alpha = c(0.3, 0.35, 0.4, 0.45, 0.5, 0.55, 0.6, 0.65, 0.7)
 
 dat_merge = read.table(paste0('Data/LD_block/ldblock_merged_chr', ch, '.txt'), header = T)
 frag_count = nrow(dat_merge)
-Qmax = matrix(0, nrow = N, ncol = frag_count)
+Qmax = list()
+for(j in 1:length(alpha)){
+  Qmax[[j]] = matrix(0, nrow = N, ncol = frag_count)
+}
 sd1 = rep(0, N)
 sd2 = rep(0, N)
 frag = matrix(0, nrow = frag_count, ncol = 2)
@@ -123,33 +121,39 @@ for(i in 1:N){
   t2 = read.table(paste0('Data/random_ld2/chr', ch, '/t_', 2*i, '.txt'))[, 1]
   r = read.table(paste0('Data/random_ld/chr', ch, '/s_', 2*N + i, '.txt'))[, 1]
   
-  u1 = sqrt(n1/M*var.beta)*t1 + sqrt(1 - var.beta - intercept)*s1
-  u2 = sqrt(n2/M*var.gamma)*t2 + sqrt(1 - var.gamma - intercept)*s2
-  v1 = r * sqrt(intercept)
-  v2 = r * sqrt(intercept)
+  u1 = sqrt(n1/M*var.beta)*t1 + sqrt(1 - var.beta - abs(intercept))*s1
+  u2 = sqrt(n2/M*var.gamma)*t2 + sqrt(1 - var.gamma - abs(intercept))*s2
+  v1 = r * sqrt(abs(intercept))
+  v2 = r * sqrt(abs(intercept)) * sign(intercept)
   z1 = u1 + v1
   z2 = u2 + v2
   z1 = z1[ind]
   z2 = z2[ind]
   sd1[i] = sqrt(mean(z1^2))
   sd2[i] = sqrt(mean(z2^2))
-  for(k in c(1:frag_count)[as.logical(ind_noninf)]){
-    re = scan(z1[frag[k,1]:frag[k,2]], z2[frag[k,1]:frag[k,2]], ldsc[frag[k,1]:frag[k,2]], Cn, inter, frag[k,1], frag[k,2], alpha)
-    Qmax[i, k] = as.numeric(re[[1]])
+  for(j in 1:length(alpha)){
+    for(k in c(1:frag_count)[as.logical(ind_noninf)]){
+      re = scan(z1[frag[k,1]:frag[k,2]], z2[frag[k,1]:frag[k,2]], ldsc[frag[k,1]:frag[k,2]], Cn, inter, frag[k,1], frag[k,2], alpha[j])
+      Qmax[[j]][i, k] = as.numeric(re[[1]])
+    }
   }
   setTxtProgressBar(pb, i)
 }
 
-if(!dir.exists('Temp/sd')){
-  dir.create('Temp/sd')
+if(!dir.exists(paste0(dir_out, '/Temp'))){
+  dir.create(paste0(dir_out, '/Temp'))
 }
-if(!dir.exists('Temp/Qmax')){
-  dir.create('Temp/Qmax')
+if(!dir.exists(paste0(dir_out, '/Temp/sd'))){
+  dir.create(paste0(dir_out, '/Temp/sd'))
 }
-write.table(sd1, paste0('Temp/sd/sd1_chr', ch, '.txt'), quote = F, col.names = F, row.names = F)
-write.table(sd2, paste0('Temp/sd/sd2_chr', ch, '.txt'), quote = F, col.names = F, row.names = F)
-write.table(Qmax, paste0('Temp/Qmax/Qmax_chr', ch, '.txt'), quote = F, col.names = F, row.names = F)
-
+if(!dir.exists(paste0(dir_out, '/Temp/Qmax'))){
+  dir.create(paste0(dir_out, '/Temp/Qmax'))
+}
+write.table(sd1, paste0(dir_out, '/Temp/sd/sd1_chr', ch, '.txt'), quote = F, col.names = F, row.names = F)
+write.table(sd2, paste0(dir_out, '/Temp/sd/sd2_chr', ch, '.txt'), quote = F, col.names = F, row.names = F)
+for(j in 1:length(alpha)){
+  write.table(Qmax[[j]], paste0(dir_out, '/Temp/Qmax/Qmax_chr', ch, '_alpha_', alpha[j], '.txt'), quote = F, col.names = F, row.names = F)
+}
 
 
 
