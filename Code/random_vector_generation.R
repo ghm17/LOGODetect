@@ -9,26 +9,29 @@ N = 5000
 N0 = 503
 
 ############## create directory
-if(!dir.exists('Temp/random_ld')){
-  dir.create('Temp/random_ld')
+if(!dir.exists('./Temp')){
+  dir.create('./Temp')
 }
-if(!dir.exists('Temp/random_ld2')){
-  dir.create('Temp/random_ld2')
+if(!dir.exists('./Temp/random_ld')){
+  dir.create('./Temp/random_ld')
 }
-if(!dir.exists(paste0('Temp/random_ld/chr', ch))){
-  dir.create(paste0('Temp/random_ld/chr', ch))
+if(!dir.exists('./Temp/random_ld2')){
+  dir.create('./Temp/random_ld2')
 }
-if(!dir.exists(paste0('Temp/random_ld2/chr', ch))){
-  dir.create(paste0('Temp/random_ld2/chr', ch))
+if(!dir.exists(paste0('./Temp/random_ld/chr', ch))){
+  dir.create(paste0('./Temp/random_ld/chr', ch))
+}
+if(!dir.exists(paste0('./Temp/random_ld2/chr', ch))){
+  dir.create(paste0('./Temp/random_ld2/chr', ch))
 }
 for(i in 1:(3*N)){
-  if(!dir.exists(paste0('Temp/random_ld/chr', ch, '/', i))){
-    dir.create(paste0('Temp/random_ld/chr', ch, '/', i))
+  if(!dir.exists(paste0('./Temp/random_ld/chr', ch, '/', i))){
+    dir.create(paste0('./Temp/random_ld/chr', ch, '/', i))
   }
 }
 for(i in 1:(2*N)){
-  if(!dir.exists(paste0('Temp/random_ld2/chr', ch, '/', i))){
-    dir.create(paste0('Temp/random_ld2/chr', ch, '/', i))
+  if(!dir.exists(paste0('./Temp/random_ld2/chr', ch, '/', i))){
+    dir.create(paste0('./Temp/random_ld2/chr', ch, '/', i))
   }
 }
 

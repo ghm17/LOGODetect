@@ -78,7 +78,7 @@ dat1_chr = list()
 dat2_chr = list()
 
 if(!dir.exists(paste0(dir_out, '/Data_QC'))){
-  paste0(dir_out, '/Data_QC')
+  dir.create(paste0(dir_out, '/Data_QC'))
 }
 for(ch in 1:22){
   dat1_chr[[ch]] = dat1[dat1$chr==ch, ]

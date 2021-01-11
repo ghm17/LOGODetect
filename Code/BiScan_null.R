@@ -44,7 +44,7 @@ ind = ref_snp%in%dat_snp
 ldsc = ldsc[ind]
 for(i in 1:M) ldsc[i] = max(ldsc[i], 1)
 
-scan = function(z1, z2, ldsc, Cn, inter, le, ri, alpha){
+scan = function(z1, z2, ldsc, Cn, inter, le, ri, theta){
   m = length(z1)
   z1_time_z2 = rep(0, m + 1)
   ldscore_sum = rep(0, m + 1)
@@ -59,7 +59,7 @@ scan = function(z1, z2, ldsc, Cn, inter, le, ri, alpha){
       j_count = ceiling((m-I+1)/inter)
       qq = rep(0, j_count)
       for(j in 1:j_count){
-        qq[j] = (z1_time_z2[(j-1)*inter+1 +I] - z1_time_z2[(j-1)*inter+1])/(ldscore_sum[(j-1)*inter+1 +I] - ldscore_sum[(j-1)*inter+1])^alpha
+        qq[j] = (z1_time_z2[(j-1)*inter+1 +I] - z1_time_z2[(j-1)*inter+1])/(ldscore_sum[(j-1)*inter+1 +I] - ldscore_sum[(j-1)*inter+1])^theta
         qq[j] = abs(qq[j])
       }
       Q = max(qq)
@@ -78,7 +78,7 @@ scan = function(z1, z2, ldsc, Cn, inter, le, ri, alpha){
   Qmax = -Inf
   for(I in 1:m){
     for(j in 1:(m-I+1)){
-      Q = (z1_time_z2[j+I] - z1_time_z2[j])/(ldscore_sum[j+I] - ldscore_sum[j])^alpha
+      Q = (z1_time_z2[j+I] - z1_time_z2[j])/(ldscore_sum[j+I] - ldscore_sum[j])^theta
       Q = abs(Q)
       if(Qmax < Q){
         Qmax = Q
@@ -95,12 +95,12 @@ scan = function(z1, z2, ldsc, Cn, inter, le, ri, alpha){
 ## change parameter
 Cn = 2000
 inter = 20
-alpha = c(0.3, 0.35, 0.4, 0.45, 0.5, 0.55, 0.6, 0.65, 0.7)
+theta = c(0.3, 0.35, 0.4, 0.45, 0.5, 0.55, 0.6, 0.65, 0.7)
 
 dat_merge = read.table(paste0('Data/LD_block/ldblock_merged_chr', ch, '.txt'), header = T)
 frag_count = nrow(dat_merge)
 Qmax = list()
-for(j in 1:length(alpha)){
+for(j in 1:length(theta)){
   Qmax[[j]] = matrix(0, nrow = N, ncol = frag_count)
 }
 sd1 = rep(0, N)
@@ -131,9 +131,9 @@ for(i in 1:N){
   z2 = z2[ind]
   sd1[i] = sqrt(mean(z1^2))
   sd2[i] = sqrt(mean(z2^2))
-  for(j in 1:length(alpha)){
+  for(j in 1:length(theta)){
     for(k in c(1:frag_count)[as.logical(ind_noninf)]){
-      re = scan(z1[frag[k,1]:frag[k,2]], z2[frag[k,1]:frag[k,2]], ldsc[frag[k,1]:frag[k,2]], Cn, inter, frag[k,1], frag[k,2], alpha[j])
+      re = scan(z1[frag[k,1]:frag[k,2]], z2[frag[k,1]:frag[k,2]], ldsc[frag[k,1]:frag[k,2]], Cn, inter, frag[k,1], frag[k,2], theta[j])
       Qmax[[j]][i, k] = as.numeric(re[[1]])
     }
   }
@@ -151,8 +151,8 @@ if(!dir.exists(paste0(dir_out, '/Temp/Qmax'))){
 }
 write.table(sd1, paste0(dir_out, '/Temp/sd/sd1_chr', ch, '.txt'), quote = F, col.names = F, row.names = F)
 write.table(sd2, paste0(dir_out, '/Temp/sd/sd2_chr', ch, '.txt'), quote = F, col.names = F, row.names = F)
-for(j in 1:length(alpha)){
-  write.table(Qmax[[j]], paste0(dir_out, '/Temp/Qmax/Qmax_chr', ch, '_alpha_', alpha[j], '.txt'), quote = F, col.names = F, row.names = F)
+for(j in 1:length(theta)){
+  write.table(Qmax[[j]], paste0(dir_out, '/Temp/Qmax/Qmax_chr', ch, '_theta_', theta[j], '.txt'), quote = F, col.names = F, row.names = F)
 }
 
 

@@ -4,7 +4,7 @@ options(stringsAsFactors=F)
 args = commandArgs(trailingOnly=TRUE)
 dir_out = as.character(args[1])
 
-scan = function(z1, z2, ldsc, Cn, inter, le, ri, alpha){
+scan = function(z1, z2, ldsc, Cn, inter, le, ri, theta){
   m = length(z1)
   z1_time_z2 = rep(0, m + 1)
   ldscore_sum = rep(0, m + 1)
@@ -19,7 +19,7 @@ scan = function(z1, z2, ldsc, Cn, inter, le, ri, alpha){
       j_count = ceiling((m-I+1)/inter)
       qq = rep(0, j_count)
       for(j in 1:j_count){
-        qq[j] = (z1_time_z2[(j-1)*inter+1 +I] - z1_time_z2[(j-1)*inter+1])/(ldscore_sum[(j-1)*inter+1 +I] - ldscore_sum[(j-1)*inter+1])^alpha
+        qq[j] = (z1_time_z2[(j-1)*inter+1 +I] - z1_time_z2[(j-1)*inter+1])/(ldscore_sum[(j-1)*inter+1 +I] - ldscore_sum[(j-1)*inter+1])^theta
         qq[j] = abs(qq[j])
       }
       Q = max(qq)
@@ -38,7 +38,7 @@ scan = function(z1, z2, ldsc, Cn, inter, le, ri, alpha){
   Qmax = -Inf
   for(I in 1:m){
     for(j in 1:(m-I+1)){
-      Q = (z1_time_z2[j+I] - z1_time_z2[j])/(ldscore_sum[j+I] - ldscore_sum[j])^alpha
+      Q = (z1_time_z2[j+I] - z1_time_z2[j])/(ldscore_sum[j+I] - ldscore_sum[j])^theta
       Q = abs(Q)
       if(Qmax < Q){
         Qmax = Q
@@ -52,8 +52,8 @@ scan = function(z1, z2, ldsc, Cn, inter, le, ri, alpha){
   re[[2]] = c(low + le - 1, high + le - 1)
   return(re)
 }
-whole_scan = function(z1, z2, ldsc, Cn, inter, thre, le, ri, alpha){
-  re = scan(z1, z2, ldsc, Cn, inter, le, ri, alpha)
+whole_scan = function(z1, z2, ldsc, Cn, inter, thre, le, ri, theta){
+  re = scan(z1, z2, ldsc, Cn, inter, le, ri, theta)
   if(re[[1]] <= thre){
     return(list())
   }
@@ -62,22 +62,22 @@ whole_scan = function(z1, z2, ldsc, Cn, inter, thre, le, ri, alpha){
     b = re[[2]][2]
     if(a == le & b == ri){return(re)}
     if(a == le & b < ri){
-      return( c( re , whole_scan(z1[(b+2-le):(ri+1-le)], z2[(b+2-le):(ri+1-le)], ldsc[(b+2-le):(ri+1-le)], Cn, inter, thre, b+1, ri, alpha) ) )
+      return( c( re , whole_scan(z1[(b+2-le):(ri+1-le)], z2[(b+2-le):(ri+1-le)], ldsc[(b+2-le):(ri+1-le)], Cn, inter, thre, b+1, ri, theta) ) )
     }
     if(a > le & b == ri){
-      return( c( whole_scan(z1[1:(a-le)], z2[1:(a-le)], ldsc[1:(a-le)], Cn, inter, thre, le, a-1, alpha), re) )
+      return( c( whole_scan(z1[1:(a-le)], z2[1:(a-le)], ldsc[1:(a-le)], Cn, inter, thre, le, a-1, theta), re) )
     }
-    return( c( whole_scan(z1[1:(a-le)], z2[1:(a-le)], ldsc[1:(a-le)], Cn, inter, thre, le, a-1, alpha), re, whole_scan(z1[(b+2-le):(ri+1-le)], z2[(b+2-le):(ri+1-le)], ldsc[(b+2-le):(ri+1-le)], Cn, inter, thre, b+1, ri, alpha) ) )
+    return( c( whole_scan(z1[1:(a-le)], z2[1:(a-le)], ldsc[1:(a-le)], Cn, inter, thre, le, a-1, theta), re, whole_scan(z1[(b+2-le):(ri+1-le)], z2[(b+2-le):(ri+1-le)], ldsc[(b+2-le):(ri+1-le)], Cn, inter, thre, b+1, ri, theta) ) )
   }
 }
 
 Cn = 2000
 inter = 20
-alpha = c(0.3, 0.35, 0.4, 0.45, 0.5, 0.55, 0.6, 0.65, 0.7)
+theta = c(0.3, 0.35, 0.4, 0.45, 0.5, 0.55, 0.6, 0.65, 0.7)
 N = 5000   ##size of scan stat empirical distribution
 
 Result = list()
-for(j in 1:length(alpha)){
+for(j in 1:length(theta)){
   Result[[j]] = as.data.frame(matrix(0, nrow = 0, ncol = 9))
   colnames(Result[[j]]) = c('chr', 'begin', 'stop', 'count', 'stat', 'pval', 'begin_pos', 'stop_pos', 'screening_frag')
 }
@@ -95,7 +95,7 @@ for(ch in 1:22){
   frag_count = Frag_count[ch]
   LDSC = read.table(paste0('Data/ldsc/l2/chr', ch, '.l2.ldscore'), header = T)
   ref_snp = LDSC$SNP
-  dat_snp = read.table(paste0(dir_out, '/Data_QC/dat1_chr', ch, '.txt'))[, 1]
+  dat_snp = read.table(paste0(dir_out, '/Data_QC/dat1_chr', ch, '.txt'), header = T)$SNP
   ldsc = LDSC$L2
   ind = ref_snp%in%dat_snp
   ldsc = ldsc[ind]
@@ -106,8 +106,8 @@ for(ch in 1:22){
   z1 = dat1[[ch]]$Z
   z2 = dat2[[ch]]$Z
   Qmax = list()
-  for(j in 1:length(alpha)){
-    Qmax[[j]] = as.matrix(read.table(paste0(dir_out, '/Temp/Qmax/Qmax_chr', ch, '_alpha_', alpha[j], '.txt')))
+  for(j in 1:length(theta)){
+    Qmax[[j]] = as.matrix(read.table(paste0(dir_out, '/Temp/Qmax/Qmax_chr', ch, '_theta_', theta[j], '.txt')))
   }
   sd1_data = sqrt(mean(z1^2))
   sd2_data = sqrt(mean(z2^2))
@@ -116,7 +116,7 @@ for(ch in 1:22){
   
   q = list()
   Qmax_scaled = list()
-  for(j in 1:length(alpha)){
+  for(j in 1:length(theta)){
     Qmax_scaled[[j]] = matrix(0, nrow = N, ncol = frag_count)
     q[[j]] = rep(0, frag_count)
     for(k in 1:frag_count){
@@ -132,16 +132,16 @@ for(ch in 1:22){
     frag[k, 2] = max(which( dat1[[ch]]$pos <= dat_merge[[ch]][k, 2] ))
     ind_noninf[k] = is.finite(frag[k, 1]) & is.finite(frag[k, 2])
   }
-  for(j in 1:length(alpha)){
+  for(j in 1:length(theta)){
     for(k in c(1:frag_count)[as.logical(ind_noninf)]){
-      result = whole_scan(z1[frag[k,1]:frag[k,2]], z2[frag[k,1]:frag[k,2]], ldsc[frag[k,1]:frag[k,2]], Cn, inter, q[[j]][k], frag[k,1], frag[k,2], alpha[j])
+      result = whole_scan(z1[frag[k,1]:frag[k,2]], z2[frag[k,1]:frag[k,2]], ldsc[frag[k,1]:frag[k,2]], Cn, inter, q[[j]][k], frag[k,1], frag[k,2], theta[j])
       detect = c()
       if(length(result)>0){
         for(i in 1:(length(result)/2)){
           begin = result[[2*i]][1]
           stop = result[[2*i]][2]
           count = stop - begin + 1
-          stat = sum(z1[begin:stop]*z2[begin:stop])/(sum(ldsc[begin:stop]))^alpha[j]
+          stat = sum(z1[begin:stop]*z2[begin:stop])/(sum(ldsc[begin:stop]))^theta[j]
           pval = (sum(abs(stat) < Qmax_scaled[[j]][,k]) + 1)/(N + 1)
           begin_pos = round(dat1[[ch]]$pos[begin]/1000000, 3)
           stop_pos = round(dat1[[ch]]$pos[stop]/1000000, 3)
@@ -156,7 +156,11 @@ for(ch in 1:22){
   }
 }
 
-for(j in 1:length(alpha)){
+if(!dir.exists(paste0(dir_out, '/Temp/Result_different_theta'))){
+  dir.create(paste0(dir_out, '/Temp/Result_different_theta'))
+}
+
+for(j in 1:length(theta)){
   Result[[j]] = Result[[j]][order(Result[[j]]$stat, decreasing = T),]
   Result[[j]] = Result[[j]][order(Result[[j]]$pval),]
   Result[[j]]$testing_count = testing_count
@@ -172,9 +176,8 @@ for(j in 1:length(alpha)){
   p_val = Result[[j]]$pval
   BH = max(which(p_val<=0.05/Result[[j]]$testing_count*c(1:n0)))
   Result[[j]]$qval = Result[[j]]$pval * Result[[j]]$testing_count / c(1:n0)
-  Result[[j]]$significant = 0
   if(BH>0){
-    write.table(Result[[j]][1:BH, ], paste0(dir_out, '/Temp/Result_alpha_', alpha[j], '.txt'), col.names = T, row.names = F, quote = F)
+    write.table(Result[[j]][1:BH, c('chr', 'begin_pos', 'stop_pos', 'stat', 'pval', 'qval')], paste0(dir_out, '/Temp/Result_different_theta/Result_theta_', theta[j], '.txt'), col.names = T, row.names = F, quote = F)
   }
 }
 

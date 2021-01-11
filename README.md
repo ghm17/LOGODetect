@@ -30,7 +30,6 @@ The column names here denote chromosome, SNP rs-ID, position, effect allele, non
 If this is the first time you use LOGODetect, run the following commands:
     
     cd ./LOGODetect
-    mkdir Temp
     source ./Code/calculateLD.txt  
     for chr in $(seq 22)
     do
@@ -53,42 +52,55 @@ This step follows the instruction of `ldsc` to estimate genetic correlation, det
     mkdir output_dir/ldsc
     source activate ldsc
     cd ./LOGODetect
-    python ./LOGODetect/Data/ldsc/munge_sumstats.py \
+    python ./Data/ldsc/munge_sumstats.py \
     --sumstats BIP.txt \
     --out output_dir/ldsc/dat1_reformated \
     --merge-alleles Data/ldsc/w_hm3.snplist
 
-    python ./LOGODetect/Data/ldsc/munge_sumstats.py \
+    python ./Data/ldsc/munge_sumstats.py \
     --sumstats SCZ.txt \
     --out output_dir/ldsc/dat2_reformated \
     --merge-alleles Data/ldsc/w_hm3.snplist
 
-    python ./LOGODetect/Data/ldsc/ldsc.py \
+    python ./Data/ldsc/ldsc.py \
     --rg output_dir/ldsc/dat1_reformated.sumstats.gz,output_dir/ldsc/dat2_reformated.sumstats.gz \
-    --ref-ld-chr ./LOGODetect/Data/ldsc/eur_w_ld_chr/baseline. \
-    --w-ld-chr ./LOGODetect/Data/ldsc/weights_hm3_no_hla/weights. \
+    --ref-ld-chr ./Data/ldsc/eur_w_ld_chr/baseline. \
+    --w-ld-chr ./Data/ldsc/weights_hm3_no_hla/weights. \
     --out output_dir/ldsc/ldsc_trait1_trait2
-    source deactivate ldsc
+    source deactivate
 
 ### Step 3-Calculate the scan statistic distribution under the null
     
     cd ./LOGODetect
-    Rscript ./LOGODetect/Code/BiScan_null.R chr N1 N2 output_dir
+    Rscript ./Code/BiScan_null.R chr N1 N2 output_dir
 
 The `N1` and `N2` arguments denote the sample sizes of two summary stat files. The `BiScan_null.R` should be run for all chromosomes 1-22 (It is highly recommended to run this in parallel manually by yourself). 
 
-### Step 4-Identify small regions that harbor local genetic correlation
+### Step 4-Identify small regions that harbor local genetic correlation under different \theta
         
     cd ./LOGODetect
-    Rscript ./LOGODetect/Code/BiScan.R output_dir
+    Rscript ./Code/BiScan.R output_dir
+
+### step 5-Select the best \theta using the aggregated genetic covariance of identified regions as the metric and obtain the final results
+        
+    cd ./LOGODetect/Data
+    wget https://storage.googleapis.com/broad-alkesgroup-public/LDSCORE/1000G_Phase3_plinkfiles.tgz
+    wget https://storage.googleapis.com/broad-alkesgroup-public/LDSCORE/hapmap3_snps.tgz
+    tar -zxvf 1000G_Phase3_plinkfiles.tgz
+    tar -zxvf hapmap3_snps.tgz
+    
+    cd ./LOGODetect
+    Rscript ./Code/S-LDSC.R output_dir
+
+The two files `1000G_Phase3_plinkfiles.tgz` and `hapmap3_snps.tgz` are needed when performing stratified-LDSC to calculate the aggregated genetic covariance of identified regions. Finally, `S-LDSC.R` selects the best \theta and returns the final result of LOGODetect in `output_dir/LOGODetect_result.txt`. 
 
 ## Output
-After running all the above steps, LOGODetect outputs a whitespace-delimited text file, with each row representing one small segment and the columns as such:
+After running all the above steps, LOGODetect outputs a whitespace-delimited text file `output_dir/LOGODetect_result.txt`, with each row representing one small segment and the columns as such:
 * `chr`: The chromosome. 
-* `stat`: The scan statistic value. Positive value means positive local genetic correlation between two traits. 
-* `pval`: The p-value of this detected small region.
 * `begin_pos`: The starting position of this detected small region.
 * `stop_pos`: The stopping position of this detected small region.
+* `stat`: The scan statistic value. Positive value means positive local genetic correlation between two traits. 
+* `pval`: The p-value of this detected small region.
 * `qval`: The q-value of this detected small region.
 
 # Citation
