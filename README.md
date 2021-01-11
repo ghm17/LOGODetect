@@ -81,7 +81,7 @@ The `N1` and `N2` arguments denote the sample sizes of two summary stat files. T
     cd ./LOGODetect
     Rscript ./Code/BiScan.R output_dir
 
-### step 5-Select the best \theta using the aggregated genetic covariance of identified regions as the metric and obtain the final results
+### step 5-Select the best $\theta$ using the aggregated genetic covariance of identified regions as the metric and obtain the final results
         
     cd ./LOGODetect/Data
     wget https://storage.googleapis.com/broad-alkesgroup-public/LDSCORE/1000G_Phase3_plinkfiles.tgz
@@ -92,7 +92,7 @@ The `N1` and `N2` arguments denote the sample sizes of two summary stat files. T
     cd ./LOGODetect
     Rscript ./Code/S-LDSC.R output_dir
 
-The two files `1000G_Phase3_plinkfiles.tgz` and `hapmap3_snps.tgz` are needed when performing stratified-LDSC to calculate the aggregated genetic covariance of identified regions. Finally, `S-LDSC.R` selects the best \theta and returns the final result of LOGODetect in `output_dir/LOGODetect_result.txt`. 
+The two files `1000G_Phase3_plinkfiles.tgz` and `hapmap3_snps.tgz` are needed when performing stratified-LDSC to calculate the aggregated genetic covariance of identified regions. Finally, `S-LDSC.R` selects the best $\theta$ and returns the final result of LOGODetect in `output_dir/LOGODetect_result.txt`. 
 
 ## Output
 After running all the above steps, LOGODetect outputs a whitespace-delimited text file `output_dir/LOGODetect_result.txt`, with each row representing one small segment and the columns as such:
