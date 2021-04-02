@@ -104,6 +104,10 @@ After running all the above steps, LOGODetect outputs a whitespace-delimited tex
 * `qval`: The q-value of this detected small region.
 
 # Citation
+If you use the software of LOGODetect, please cite: 
+
+[Guo, et al. Detecting Local Genetic Correlations with Scan Statistics. Nature Communications, 2021](https://www.nature.com/articles/s41467-021-22334-6).
+
 The genetic correlation estimation is adapted from `ldsc`, see [Bulik-Sullivan, B., et al. An Atlas of Genetic Correlations across Human Diseases and Traits. Nature Genetics, 2015](https://www.nature.com/articles/ng.3406). 
 
-The LD blocks partition is adapted from `LDetect`, see [Berisa, Tomaz, and Joseph K. Pickrell. Approximately independent linkage disequilibrium blocks in human populations. Bioinformatics (2016)](https://academic.oup.com/bioinformatics/article/32/2/283/1743626/)
+The LD blocks partition is adapted from `LDetect`, see [Berisa, Tomaz, and Joseph K. Pickrell. Approximately independent linkage disequilibrium blocks in human populations. Bioinformatics (2016)](https://academic.oup.com/bioinformatics/article/32/2/283/1743626/).
