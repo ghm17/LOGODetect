@@ -20,16 +20,6 @@ if(!dir.exists(paste0('Data/random_ld/chr', ch))){
 if(!dir.exists(paste0('Data/random_ld2/chr', ch))){
   dir.create(paste0('Data/random_ld2/chr', ch))
 }
-for(i in 1:(3*N)){
-  if(!dir.exists(paste0('Data/random_ld/chr', ch, '/', i))){
-    dir.create(paste0('Data/random_ld/chr', ch, '/', i))
-  }
-}
-for(i in 1:(2*N)){
-  if(!dir.exists(paste0('Data/random_ld2/chr', ch, '/', i))){
-    dir.create(paste0('Data/random_ld2/chr', ch, '/', i))
-  }
-}
 
 
 
