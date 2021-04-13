@@ -102,6 +102,7 @@ After running all the above steps, LOGODetect outputs a whitespace-delimited tex
 * `stat`: The scan statistic value. Positive value means positive local genetic correlation between two traits. 
 * `pval`: The p-value of this detected small region.
 * `qval`: The q-value of this detected small region.
+
 We have prepared the example output file for you in the directory `./example/LOGODetect_result.txt`. 
 
 # Citation
