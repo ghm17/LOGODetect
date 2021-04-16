@@ -38,7 +38,7 @@ for(i in 1:(2*N)){
 
 
 thre = 1000
-rmv = function(n, mu, Sigma){
+rmv = function(n, Sigma){
   SVD = svd(Sigma, nu = 0, nv = nrow(Sigma))
   sv = SVD$d
   p = sum(sv>0)
@@ -63,8 +63,8 @@ ld_diag[[2]] = LD[[1]][(len[1]+1):(len[1]+len[2]), (len[1]+1):(len[1]+len[2])]
 ld2_diag[[1]] = (N0-1)/(N0-2)*( ld_diag[[1]]%*%ld_diag[[1]] + ld_offdiag[[1]]%*%t(ld_offdiag[[1]]) ) - sum(len[1:2])/(N0-2)*ld_diag[[1]]
 ld2_offdiag[[1]] = (N0-1)/(N0-2)*( ld_diag[[1]]%*%ld_offdiag[[1]] + ld_offdiag[[1]]%*%ld_diag[[2]] ) - sum(len[1:2])/(N0-2)*ld_offdiag[[1]]
 
-ss = rmv(3*N, rep(0, len[1]), ld_diag[[1]])
-tt = rmv(2*N, rep(0, len[1]), ld2_diag[[1]])
+ss = rmv(3*N, ld_diag[[1]])
+tt = rmv(2*N, ld2_diag[[1]])
 ss = cbind(1:(3*N), ss)
 tt = cbind(1:(2*N), tt)
 wri_ss = function(dat){
@@ -113,8 +113,8 @@ for(j in 2:(count-1)){
   C2 = t(T12)%*%V2%*%D2%*%t(V2)
   Sigma2 = T22 - C2%*%T12
   
-  ss_new = rmv(3*N, rep(0, len[j]), Sigma1) + ss%*%t(C1)
-  tt_new = rmv(2*N, rep(0, len[j]), Sigma2) + tt%*%t(C2)
+  ss_new = rmv(3*N, Sigma1) + ss%*%t(C1)
+  tt_new = rmv(2*N, Sigma2) + tt%*%t(C2)
   ss = ss_new
   tt = tt_new
   ss = cbind(1:(3*N), ss)
@@ -165,8 +165,8 @@ T12 = ld2_offdiag[[j-1]]
 T22 = ld2_diag[[j]]
 C2 = t(T12)%*%V2%*%D2%*%t(V2)
 Sigma2 = T22 - C2%*%T12
-ss_new = rmv(3*N, rep(0, len[j]), Sigma1) + ss%*%t(C1)
-tt_new = rmv(2*N, rep(0, len[j]), Sigma2) + tt%*%t(C2)
+ss_new = rmv(3*N, Sigma1) + ss%*%t(C1)
+tt_new = rmv(2*N, Sigma2) + tt%*%t(C2)
 ss = ss_new
 tt = tt_new
 ss = cbind(1:(3*N), ss)
