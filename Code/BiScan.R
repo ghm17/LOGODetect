@@ -7,12 +7,8 @@ dir_out = as.character(args[1])
 
 scan = function(z1, z2, ldsc, Cn, inter, le, ri, theta){
   m = length(z1)
-  z1_time_z2 = rep(0, m + 1)
-  ldscore_sum = rep(0, m + 1)
-  for(i in 1:m){
-    z1_time_z2[i+1] = z1_time_z2[i]+ z1[i]*z2[i]
-    ldscore_sum[i+1] = ldscore_sum[i] + ldsc[i]
-  }
+  z1_time_z2 = c(0,  cumsum(z1 * z2))
+  ldscore_sum = c(0, cumsum(ldsc))
   if(m > Cn){
     Qmax = -Inf
     window = seq(from = inter, to = floor(Cn/inter)*inter, by = inter)
