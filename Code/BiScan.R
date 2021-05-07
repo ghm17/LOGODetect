@@ -1,6 +1,7 @@
 library(data.table)
 library(MASS)
 options(stringsAsFactors=F)
+options(datatable.fread.datatable=F)
 args = commandArgs(trailingOnly=TRUE)
 dir_out = as.character(args[1])
 
@@ -85,7 +86,7 @@ for(j in 1:length(theta)){
 dat_merge = list()
 Frag_count = rep(0, 22)
 for(ch in 1:22){
-  dat_merge[[ch]] = read.table(paste0('Data/LD_block/ldblock_merged_chr', ch, '.txt'), header = T)
+  dat_merge[[ch]] = fread(paste0('Data/LD_block/ldblock_merged_chr', ch, '.txt'), header = T)
   Frag_count[ch] = nrow(dat_merge[[ch]])
 }
 testing_count = sum(Frag_count)
@@ -93,26 +94,26 @@ dat1 = list()
 dat2 = list()
 for(ch in 1:22){
   frag_count = Frag_count[ch]
-  LDSC = read.table(paste0('Data/ldsc/l2/chr', ch, '.l2.ldscore'), header = T)
+  LDSC = fread(paste0('Data/ldsc/l2/chr', ch, '.l2.ldscore'), header = T)
   ref_snp = LDSC$SNP
-  dat_snp = read.table(paste0(dir_out, '/Data_QC/dat1_chr', ch, '.txt'), header = T)$SNP
+  dat_snp = fread(paste0(dir_out, '/Data_QC/dat1_chr', ch, '.txt'), header = T)$SNP
   ldsc = LDSC$L2
   ind = ref_snp%in%dat_snp
   ldsc = ldsc[ind]
   M = length(dat_snp)
   for(i in 1:M) ldsc[i] = max(ldsc[i], 1)
-  dat1[[ch]] = read.table(paste0(dir_out, '/Data_QC/dat1_chr', ch, '.txt'), header = T)
-  dat2[[ch]] = read.table(paste0(dir_out, '/Data_QC/dat2_chr', ch, '.txt'), header = T)
+  dat1[[ch]] = fread(paste0(dir_out, '/Data_QC/dat1_chr', ch, '.txt'), header = T)
+  dat2[[ch]] = fread(paste0(dir_out, '/Data_QC/dat2_chr', ch, '.txt'), header = T)
   z1 = dat1[[ch]]$Z
   z2 = dat2[[ch]]$Z
   Qmax = list()
   for(j in 1:length(theta)){
-    Qmax[[j]] = as.matrix(read.table(paste0(dir_out, '/Temp/Qmax/Qmax_chr', ch, '_theta_', theta[j], '.txt')))
+    Qmax[[j]] = as.matrix(fread(paste0(dir_out, '/Temp/Qmax/Qmax_chr', ch, '_theta_', theta[j], '.txt')))
   }
   sd1_data = sqrt(mean(z1^2))
   sd2_data = sqrt(mean(z2^2))
-  sd1_generated = read.table(paste0(dir_out, '/Temp/sd/sd1_chr', ch, '.txt'))[, 1]
-  sd2_generated = read.table(paste0(dir_out, '/Temp/sd/sd2_chr', ch, '.txt'))[, 1]
+  sd1_generated = fread(paste0(dir_out, '/Temp/sd/sd1_chr', ch, '.txt'))[, 1]
+  sd2_generated = fread(paste0(dir_out, '/Temp/sd/sd2_chr', ch, '.txt'))[, 1]
   
   q = list()
   Qmax_scaled = list()
