@@ -53,12 +53,12 @@ This step follows the instruction of `ldsc` to estimate genetic correlation, det
     source activate ldsc
     cd ./LOGODetect
     python ./Data/ldsc/munge_sumstats.py \
-    --sumstats BIP.txt \
+    --sumstats output_dir/Data_QC/dat1.txt \
     --out output_dir/ldsc/dat1_reformated \
     --merge-alleles Data/ldsc/w_hm3.snplist
 
     python ./Data/ldsc/munge_sumstats.py \
-    --sumstats SCZ.txt \
+    --sumstats output_dir/Data_QC/dat2.txt \
     --out output_dir/ldsc/dat2_reformated \
     --merge-alleles Data/ldsc/w_hm3.snplist
 
