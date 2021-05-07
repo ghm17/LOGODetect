@@ -59,10 +59,9 @@ scan = function(z1, z2, ldsc, Cn, inter, le, ri, theta){
     for(I in window){
       j_count = ceiling((m-I+1)/inter)
       qq = rep(0, j_count)
-      for(j in 1:j_count){
-        qq[j] = (z1_time_z2[(j-1)*inter+1 +I] - z1_time_z2[(j-1)*inter+1])/(ldscore_sum[(j-1)*inter+1 +I] - ldscore_sum[(j-1)*inter+1])^theta
-        qq[j] = abs(qq[j])
-      }
+      j = 1:j_count
+      qq = (z1_time_z2[(j-1)*inter+1 +I] - z1_time_z2[(j-1)*inter+1])/(ldscore_sum[(j-1)*inter+1 +I] - ldscore_sum[(j-1)*inter+1])^theta
+      qq = abs(qq)
       Q = max(qq)
       ind_Q = which.max(qq)
       if(Qmax < Q){
