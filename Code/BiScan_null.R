@@ -1,6 +1,7 @@
 library(data.table)
 warnings('off')
 options(stringsAsFactors=F)
+options(datatable.fread.datatable=F)
 args = commandArgs(trailingOnly=TRUE)
 ch = as.numeric(args[1])
 n1 = as.numeric(args[2])  ##sample size for trait1
@@ -31,12 +32,12 @@ var.gamma = max(h2_2[ch], 0)
 
 
 ##################################### BiScan null distribution
-LDSC = read.table(paste0('Data/ldsc/l2/chr', ch, '.l2.ldscore'), header = T)
+LDSC = fread(paste0('Data/ldsc/l2/chr', ch, '.l2.ldscore'), header = T)
 ref_snp = LDSC$SNP
-dat = read.table(paste0(dir_out, '/Data_QC/dat1_chr', ch, '.txt'), header = T)
+dat = fread(paste0(dir_out, '/Data_QC/dat1_chr', ch, '.txt'), header = T)
 dat_snp = dat$SNP ##snplist in the data of interest
 ldsc = LDSC$L2
-len = read.table(paste0('Data/LD_matrix/chr', ch, '/snplist/block_len.txt'))[, 1]  ##size for each block
+len = fread(paste0('Data/LD_matrix/chr', ch, '/snplist/block_len.txt'))[, 1]  ##size for each block
 count = length(len) ##blocks count
 N = 5000   ##size of scan stat empirical distribution
 M = length(dat_snp)
@@ -97,7 +98,7 @@ Cn = 2000
 inter = 20
 theta = c(0.3, 0.35, 0.4, 0.45, 0.5, 0.55, 0.6, 0.65, 0.7)
 
-dat_merge = read.table(paste0('Data/LD_block/ldblock_merged_chr', ch, '.txt'), header = T)
+dat_merge = fread(paste0('Data/LD_block/ldblock_merged_chr', ch, '.txt'), header = T)
 frag_count = nrow(dat_merge)
 Qmax = list()
 for(j in 1:length(theta)){
@@ -115,11 +116,11 @@ for(k in 1:frag_count){
 
 pb = txtProgressBar(0, N, style = 3)
 for(i in 1:N){
-  s1 = read.table(paste0('Data/random_ld/chr', ch, '/s_', 2*i-1, '.txt'))[, 1]
-  s2 = read.table(paste0('Data/random_ld/chr', ch, '/s_', 2*i, '.txt'))[, 1]
-  t1 = read.table(paste0('Data/random_ld2/chr', ch, '/t_', 2*i-1, '.txt'))[, 1]
-  t2 = read.table(paste0('Data/random_ld2/chr', ch, '/t_', 2*i, '.txt'))[, 1]
-  r = read.table(paste0('Data/random_ld/chr', ch, '/s_', 2*N + i, '.txt'))[, 1]
+  s1 = fread(paste0('Data/random_ld/chr', ch, '/s_', 2*i-1, '.txt'))[, 1]
+  s2 = fread(paste0('Data/random_ld/chr', ch, '/s_', 2*i, '.txt'))[, 1]
+  t1 = fread(paste0('Data/random_ld2/chr', ch, '/t_', 2*i-1, '.txt'))[, 1]
+  t2 = fread(paste0('Data/random_ld2/chr', ch, '/t_', 2*i, '.txt'))[, 1]
+  r = fread(paste0('Data/random_ld/chr', ch, '/s_', 2*N + i, '.txt'))[, 1]
   
   u1 = sqrt(n1/M*var.beta)*t1 + sqrt(1 - var.beta - abs(intercept))*s1
   u2 = sqrt(n2/M*var.gamma)*t2 + sqrt(1 - var.gamma - abs(intercept))*s2
