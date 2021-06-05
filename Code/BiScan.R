@@ -139,8 +139,8 @@ for(ch in 1:22){
           count = stop - begin + 1
           stat = sum(z1[begin:stop]*z2[begin:stop])/(sum(ldsc[begin:stop]))^theta[j]
           pval = (sum(abs(stat) < Qmax_scaled[[j]][,k]) + 1)/(N + 1)
-          begin_pos = round(dat1[[ch]]$pos[begin]/1000000, 3)
-          stop_pos = round(dat1[[ch]]$pos[stop]/1000000, 3)
+          begin_pos = dat1[[ch]]$pos[begin]/1000000
+          stop_pos = dat1[[ch]]$pos[stop]/1000000
           detect_new = c(begin, stop, count, stat, pval, begin_pos, stop_pos)
           detect = rbind(detect, detect_new)
         }
