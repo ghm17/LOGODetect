@@ -1,3 +1,4 @@
+
 library(data.table)
 warnings('off')
 options(stringsAsFactors=F)
@@ -49,9 +50,9 @@ scan = function(z1, z2, ldsc, Cn, inter, le, ri, theta){
   m = length(z1)
   z1_time_z2 = c(0,  cumsum(z1 * z2))
   ldscore_sum = c(0, cumsum(ldsc))
-  if(m > Cn){
+  if(m > inter){
     Qmax = -Inf
-    window = seq(from = inter, to = floor(Cn/inter)*inter, by = inter)
+    window = seq(from = inter, to = floor(min(Cn, m)/inter)*inter, by = inter)
     for(I in window){
       j_count = ceiling((m-I+1)/inter)
       qq = rep(0, j_count)
@@ -71,23 +72,12 @@ scan = function(z1, z2, ldsc, Cn, inter, le, ri, theta){
     re[[2]] = c(low + le - 1, high + le - 1)
     return(re)
   }
-  Qmax = -Inf
-  for(I in 1:m){
-    for(j in 1:(m-I+1)){
-      Q = (z1_time_z2[j+I] - z1_time_z2[j])/(ldscore_sum[j+I] - ldscore_sum[j])^theta
-      Q = abs(Q)
-      if(Qmax < Q){
-        Qmax = Q
-        low = j
-        high = j + I - 1
-      }
-    }
-  }
   re = list()
-  re[[1]] = Qmax
-  re[[2]] = c(low + le - 1, high + le - 1)
+  re[[1]] = z1_time_z2[m + 1]/(ldscore_sum[m + 1])^theta
+  re[[2]] = c(le, ri)
   return(re)
 }
+
 ## change parameter
 Cn = 2000
 inter = 20
