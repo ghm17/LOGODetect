@@ -1,3 +1,6 @@
+# Note
+A new (cross-trait and cross-population) version of the package will be updated soon. Please email us if you would like to use the new version.
+
 # LOGODetect
 LOGODetect (LOcal Genetic cOrrelation Dectector) is a powerful tool to identify small segments that harbor local genetic correlation between two traits/diseases.
 
