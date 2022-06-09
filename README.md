@@ -1,118 +1,223 @@
-# Note
-A new (cross-trait and cross-population) version of the package will be updated soon. Please email us if you would like to use the new version.
-
 # LOGODetect
-LOGODetect (LOcal Genetic cOrrelation Dectector) is a powerful tool to identify small segments that harbor local genetic correlation between two traits/diseases.
+LOGODetect (LOcal Genetic cOrrelation Dectector) is a powerful tool to identify small segments that harbor local genetic correlation between two traits. We have now updated the software, which can identify small regions with significant local genetic correlation across two populations.
 
-## Before starting
-LOGODetect is built upon `R`, make sure that your R-version is no less than 3.5.0, and the R-package `data.table` is required to speed up reading large files. You will also need to install `plink` (downloaded [here](https://www.cog-genomics.org/plink/1.9)) to calculate LD matrix. Besides, in order to estimate the global genetic correlation between two diseases, you will need to install `Python 3` and `ldsc` (see [here](https://github.com/bulik/ldsc) for instructions).
+# Before starting
+* `LOGODetect` is developed using R and tested in Linux environments. The statistical computing software R (>=3.5.1) and the following R packages are required:
+  * [snowfall](https://CRAN.R-project.org/package=snowfall)
+  * [data.table](https://CRAN.R-project.org/package=data.table) (>=1.11.8)
+  * [optparse](https://CRAN.R-project.org/package=optparse) (>=1.6.6)
+  * [BEDMatrix](https://CRAN.R-project.org/package=BEDMatrix) (>=2.0.3)
+  * [XPASS](https://github.com/YangLabHKUST/XPASS)
 
-## Tutorial
-First download LOGODetect and the corresponding data.
-        
-    git clone git@github.com:ghm17/LOGODetect.git
+* `LOGODetect` requires `ldsc` to calculate stratified genetic covariance, installation steps see [here](https://github.com/bulik/ldsc). Make sure that `ldsc` goes well after command `conda activate ldsc` is run. 
 
-**All the following steps should be carried out under the `./LOGODetect` directory!** Suppose we would like to find which part of the genome contributes to the genetic correlation between two diseases, e.g. bipolar disorder and schizophrenia. We need to prepare the following files:
-* Two GWAS summary statistics files: We have prepared the example data for you in the directory `./example/BIP.txt.gz` and `./example/SCZ.txt.gz`. The GWAS summary statistics files need to be transformed into the standard format with the exact column names by yourself. The first few lines should look like this:
+# Single-population cross-trait analysis
 
-      head BIP.txt
-      
-      chr SNP pos A1 A2 N Z pval MAF
-      1 rs4074137 1026707 C A 51710 0.360047754483072 0.7198 0.408
-      1 rs11260590 1027070 G A 51710 -0.418067309888113 0.6765 0.106393579578418
-      1 rs74048006 1027845 T G 51710 -0.448339477300638 0.6547 0.158787159156836
-      1 rs76994018 1027846 T C 51710 -0.453310875113276 0.6513 0.158787159156836
-      1 rs12077244 1028259 C T 51710 -0.456491245373629 0.6476 0.105393579578418
-      1 rs6689308 1029805 A G 51710 -0.346923433004747 0.7273 0.160787159156836
+`LOGODetect` requires the reference genotype data and the pre-computed LD score. Here are the command line to download these reference:
+```bash
+wget ftp://ftp.biostat.wisc.edu/pub/lu_group/Projects/LOGODetect/LOGODetect_data.tar.gz
+tar -zxvf LOGODetect_data.tar.gz
+```
 
-The column names here denote chromosome, SNP rs-ID, position, effect allele, non-effect allele, sample size, z-score, p-value and minor allele frequency respectively.
-* Plink bfiles of reference panel: These are files .bed/.bim/.fam format. We have already prepared these data (of EUR population from 1000 Genomes Project, with rare variants whose MAF < 1% filtered out) in directory `./Data/LD_matrix`. In particular, the reference genotype data are partitioned into blocks, each block covers 1 centiMorgan(cM), and the Plink bfiles of every two adjacent blocks are provided. These data are used to approximate the LD matrix of the sample cohorts.
-* LD blocks partition: We have already prepared these data in directory `./Data/LD_block`. It contains a file `ldblock_count.txt` recording the LD block counts for each chromosome, and 22 files `ldblock_merged_chr@.txt` recording LD blocks partitions, each line represent the start and stop position of each LD block. On average, each LD block covers about 15 Mb. We perform LOGODetect within each LD block, and then aggregate the result together to control for FDR.
+### Applying LOGODetect
 
-### Step 0-Calculate LD matrix
-If this is the first time you use LOGODetect, run the following commands:
-    
-    cd ./LOGODetect
-    source ./Code/calculateLD.txt  
-    for chr in $(seq 22)
-    do
-    	Rscript ./Code/random_vector_generation.R ${chr}
-    	Rscript ./Code/aggregation.R ${chr}
-    done
+```bash
 
-The `random_vector_generation.R` and `aggregation.R` should be run for all chromosomes 1-22 (can be run in parallel manually by yourself). This step will generate random vectors which are needed in calculating the scan statistic null distribution. In particular, this step cost much memory and time, but it only needs to be run for one time!
+conda activate ldsc
 
-### Step 1-Data preprocessing
-        
-    cd ./LOGODetect
-    Rscript ./Code/preprocess.R BIP.txt SCZ.txt output_dir
+Rscript /LOGODetect.R \
+--sumstats PATH_TO_SUMSTAT1,PATH_TO_SUMSTAT2 \
+--n_gwas N1,N2 \
+--ref_dir PATH_TO_REFERENCE \
+--pop POPULATION \
+--ldsc_dir PATH_TO_LDSC \
+--block_partition PATH_TO_GENOME_PARTITION \
+--out_dir PATH_TO_OUTFILE \
+# The following flags are optional.
+--n_cores N_CORE
 
-The two arguments `BIP.txt` and `SCZ.txt` specify two input GWAS summary statistics files, the last argument `output_dir` specify the output directory. The argument `output_dir` should be kept consistent in the following steps. This step performs quality control and outputs two summary stat files for whole genome `output_dir/Data_QC/dat1.txt` and `output_dir/Data_QC/dat2.txt` and 44 summary stat files partitioned by chromosomes `output_dir/Data_QC/dat1_chr@.txt` and `output_dir/Data_QC/dat2_chr@.txt`.
+conda deactivate
 
-### Step 2-Use ldsc to calculate heritability and genetic correlation of two traits
-This step follows the instruction of `ldsc` to estimate genetic correlation, details see [here](https://github.com/bulik/ldsc).   
+```
+where the inputs in order are
 
-    mkdir output_dir/ldsc
-    source activate ldsc
-    cd ./LOGODetect
-    python ./Data/ldsc/munge_sumstats.py \
-    --sumstats output_dir/Data_QC/dat1.txt \
-    --out output_dir/ldsc/dat1_reformated \
-    --merge-alleles Data/ldsc/w_hm3.snplist
+* `PATH_TO_SUMSTAT1` and `PATH_TO_SUMSTAT2` (required): Full paths to two GWAS summary statistics, separated by comma.
+```
+    CHR    SNP           BP        A1    A2    BETA       P
+    1      rs4074137     1026707   A     C     0.9942     0.7198
+    1      rs11260590    1027070   A     G     1.0108     0.6765
+    1      rs74048006    1027845   T     G     0.9909     0.6547
+    ...
+```
+Or:
+```
+    CHR    SNP           BP        A1    A2    OR        P
+    1      rs4074137     1026707   C     A     0.9985    0.8976
+    1      rs11260590    1027070   G     A     1.0049    0.7808
+    1      rs74048006    1027845   T     G     0.9993    0.9579
+    ...
+```
+* `N1` and `N2` (required): Sample sizes of two GWAS summary statistics, in the same order of the GWAS summary statistics, separated by comma.
+* `PATH_TO_REFERENCE` (required): Full path to the directory that contains the reference genotype data and the pre-computed LD score. 
+* `POPULATION` (required): Population for GWAS sample, currently EUR is allowed. 
+* `PATH_TO_LDSC` (required): Full path to the directory that contains the script of LDSC.
+* `PATH_TO_GENOME_PARTITION` (required): Full path to the genome partition file. Sample data in `./LOGODetect/block_partition.txt` is provided.
+* `PATH_TO_OUTFILE` (required): Full directory to the output regions (and the temporary files). 
+* `N_CORE` (optional): Number of cores used in parallel computing. Default is 20. 
 
-    python ./Data/ldsc/munge_sumstats.py \
-    --sumstats output_dir/Data_QC/dat2.txt \
-    --out output_dir/ldsc/dat2_reformated \
-    --merge-alleles Data/ldsc/w_hm3.snplist
+### A concrete example
+```bash
+#!/bin/bash
+## ---- Download the required reference panel and example data for LOGODetect ---- ##
+wget ftp://ftp.biostat.wisc.edu/pub/lu_group/Projects/LOGODetect/LOGODetect_data.tar.gz
+tar -zxvf LOGODetect_data.tar.gz
+rm -rf LOGODetect_data.tar.gz
 
-    python ./Data/ldsc/ldsc.py \
-    --rg output_dir/ldsc/dat1_reformated.sumstats.gz,output_dir/ldsc/dat2_reformated.sumstats.gz \
-    --ref-ld-chr ./Data/ldsc/eur_w_ld_chr/baseline. \
-    --w-ld-chr ./Data/ldsc/weights_hm3_no_hla/weights. \
-    --out output_dir/ldsc/ldsc_trait1_trait2
-    source deactivate
 
-### Step 3-Calculate the scan statistic distribution under the null
-    
-    cd ./LOGODetect
-    Rscript ./Code/BiScan_null.R chr N1 N2 output_dir
+## ---- Applying LOGODetect ---- ##
+cd LOGODetect_data
 
-The `N1` and `N2` arguments denote the sample sizes of two summary stat files. The `BiScan_null.R` should be run for all chromosomes 1-22 (It is highly recommended to run this in parallel manually by yourself). 
+mkdir ./results
 
-### Step 4-Identify small regions that harbor local genetic correlation under different \theta
-        
-    cd ./LOGODetect
-    Rscript ./Code/BiScan.R output_dir
+conda activate ldsc
 
-### step 5-Select the best $\theta$ using the aggregated genetic covariance of identified regions as the metric and obtain the final results
-        
-    cd ./LOGODetect/Data
-    wget https://storage.googleapis.com/broad-alkesgroup-public/LDSCORE/1000G_Phase3_plinkfiles.tgz
-    wget https://storage.googleapis.com/broad-alkesgroup-public/LDSCORE/hapmap3_snps.tgz
-    tar -zxvf 1000G_Phase3_plinkfiles.tgz
-    tar -zxvf hapmap3_snps.tgz
-    
-    cd ./LOGODetect
-    Rscript ./Code/S-LDSC.R output_dir
+Rscript /LOGODetect/LOGODetect.R \
+--sumstats ./sumstats/BIP.txt,./sumstats/SCZ.txt \
+--n_gwas 51710,105318 \
+--ref_dir ./LOGODetect_1kg_ref \
+--pop EUR \
+--ldsc_dir /LOGODetect/ldsc \
+--block_partition /LOGODetect/block_partition.txt \
+--out_dir ./results \
+--n_cores 25
 
-The two files `1000G_Phase3_plinkfiles.tgz` and `hapmap3_snps.tgz` are needed when performing stratified-LDSC to calculate the aggregated genetic covariance of identified regions. Finally, `S-LDSC.R` selects the best $\theta$ and returns the final result of LOGODetect in `output_dir/LOGODetect_result.txt`. 
+conda deactivate
 
-## Output
-After running all the above steps, LOGODetect outputs a whitespace-delimited text file `output_dir/LOGODetect_result.txt`, with each row representing one small segment and the columns as such:
+```
+
+### Output
+LOGODetect outputs a whitespace-delimited text file `LOGODetect_regions.txt` in `PATH_TO_OUTFILE` specified by the user, with each row representing one small segment and the columns as such:
 * `chr`: The chromosome. 
-* `begin_pos`: The starting position of this detected small region (unit: MB).
-* `stop_pos`: The stopping position of this detected small region (unit: MB).
+* `begin_pos`: The starting position of this detected small region.
+* `stop_pos`: The stopping position of this detected small region.
 * `stat`: The scan statistic value. Positive value means positive local genetic correlation between two traits. 
 * `pval`: The p-value of this detected small region.
 * `qval`: The q-value of this detected small region.
 
-We have prepared the example output file for you in the directory `./example/LOGODetect_result.txt`. 
+We have prepared the example output file for you in `/LOGODetect_data/results/LOGODetect_regions.txt`. 
+
+
+# Cross-population analysis
+
+* A detailed description can be seen [here](https://github.com/qlu-lab/X-Wing). Below shows the short tutorial. `LOGODetect` requires the reference genotype data in [plink](https://zzz.bwh.harvard.edu/plink/) format and the pre-computed LD score using [LDSC](https://github.com/bulik/ldsc). We have provided these data for EUR, EAS, AFR, SAS, and AMR population using 1000 Genomes Project phase 3 samples. Here are the command line to download these reference:
+  * AFR reference:
+    ```bash
+    wget ftp://ftp.biostat.wisc.edu/pub/lu_group/Projects/XWING/ref/LOGODetect/LOGODetect_1kg_AFR.tar.gz
+    tar -zxvf LOGODetect_1kg_AFR.tar.gz
+    ```
+  * AMR reference:
+    ```bash
+    wget ftp://ftp.biostat.wisc.edu/pub/lu_group/Projects/XWING/ref/LOGODetect/LOGODetect_1kg_AMR.tar.gz
+    tar -zxvf LOGODetect_1kg_AMR.tar.gz
+    ```
+  * EAS reference:
+    ```bash
+    wget ftp://ftp.biostat.wisc.edu/pub/lu_group/Projects/XWING/ref/LOGODetect/LOGODetect_1kg_EAS.tar.gz
+    tar -zxvf LOGODetect_1kg_EAS.tar.gz
+    ```
+  * EUR reference:
+    ```bash
+    wget ftp://ftp.biostat.wisc.edu/pub/lu_group/Projects/XWING/ref/LOGODetect/LOGODetect_1kg_EUR.tar.gz
+    tar -zxvf LOGODetect_1kg_EUR.tar.gz
+    ```
+  * SAS reference:
+    ```bash
+    wget ftp://ftp.biostat.wisc.edu/pub/lu_group/Projects/XWING/ref/LOGODetect/LOGODetect_1kg_SAS.tar.gz
+    tar -zxvf LOGODetect_1kg_SAS.tar.gz
+
+### Applying LOGODetect
+
+```bash
+Rscript LOGODetect.R \
+--sumstats PATH_TO_SUMSTAT1,PATH_TO_SUMSTAT2 \
+--n_gwas N1,N2 \
+--ref_dir PATH_TO_REFERENCE \
+--pop POPULATION1,POPULATION2 \
+--block_partition PATH_TO_GENOME_PARTITION \
+--gc_snp PATH_TO_SNPLIST \
+--out_dir PATH_TO_OUTFILE \
+# The following flags are optional.
+--n_cores N_CORE
+```
+where the inputs in order are
+
+* `PATH_TO_SUMSTAT1` and `PATH_TO_SUMSTAT2` (required): Full paths to two GWAS summary statistics, separated by comma.
+* `N1` and `N2` (required): Sample sizes of two GWAS summary statistics, in the same order of the GWAS summary statistics, separated by comma.
+* `PATH_TO_REFERENCE` (required): Full path to the directory that contains the reference genotype data in the in the binary `plink` `.bed/.bim/.fam` format, the covariate files (e.g. principal components) for the reference panel, and the pre-computed LD scores. 
+* `POPULATION1` and `POPULATION2` (required): Populations for GWAS sample (could be the same in single-population cross-trait analysis), in the same order of the GWAS summary statistics, separated by comma. AFR, AMR, EAS, EUR, and SAS are allowed. 
+* `PATH_TO_GENOME_PARTITION` (required): Full path to the genome partition file.
+* `PATH_TO_SNPLIST` (required): Full path to HapMap3 SNPs file. Sample data in `./LOGODetect/1kg_hm3_snp.txt` is provided.
+* `PATH_TO_OUTFILE` (required): Full directory to the output regions. 
+* `N_CORE` (optional): Number of cores used in parallel computing. Default is 20. 
+
+### A concrete example
+```bash
+#!/bin/bash
+## ---- Download the example data ---- ##
+wget ftp://ftp.biostat.wisc.edu/pub/lu_group/Projects/XWING/example/X-Wing_example.tar.gz
+tar -zxvf X-Wing_example.tar.gz
+rm -rf X-Wing_example.tar.gz
+
+## ---- Download the required reference panel ---- ##
+cd example/data
+
+### EUR reference panel
+wget ftp://ftp.biostat.wisc.edu/pub/lu_group/Projects/XWING/ref/LOGODetect/LOGODetect_1kg_EUR.tar.gz
+tar -zxvf LOGODetect_1kg_EUR.tar.gz
+rm -rf LOGODetect_1kg_EUR.tar.gz
+
+### EAS reference panel
+wget ftp://ftp.biostat.wisc.edu/pub/lu_group/Projects/XWING/ref/LOGODetect/LOGODetect_1kg_EAS.tar.gz
+tar -zxvf LOGODetect_1kg_EAS.tar.gz
+rm -rf LOGODetect_1kg_EAS.tar.gz
+
+## ---- Applying LOGODetect ---- ##
+cd example
+
+mkdir ./results/LOGODetect
+
+Rscript /LOGODetect/LOGODetect.R \
+--sumstats ./data/sumstats/BMI_EUR.txt,./data/sumstats/BMI_EAS.txt \
+--n_gwas 359983,158284 \
+--ref_dir ./data/LOGODetect_1kg_ref \
+--pop EUR,EAS \
+--block_partition /LOGODetect/block_partition.txt \
+--gc_snp /LOGODetect/1kg_hm3_snp.txt \
+--out_dir ./results/LOGODetect \
+--n_cores 20
+
+```
+
+### Output
+* The output files include the regions with significant local genetic correlation and the annotation based on local genetic correlation as shown below
+  ```bash
+  head ./results/LOGODetect/LOGODetect_regions.txt
+
+  chr    begin_pos    stop_pos     stat                pval                   qval
+  1      32159588     32175927     13.9007303828433    0.00479904019196161    0.0107599532725034
+  1      74992278     75006328     23.659452286243     0.0001999600079984     0.00107756226532471
+  1      107872936    107899979    13.5101005165975    0.0017996400719856     0.00492533072332902
+  ```
+
+
 
 # Citation
 If you use the software of LOGODetect, please cite: 
 
-[Guo, et al. Detecting Local Genetic Correlations with Scan Statistics. Nature Communications, 2021](https://www.nature.com/articles/s41467-021-22334-6).
+Guo, H., Li, J. J., Lu, Q., Hou, L. [Detecting Local Genetic Correlations with Scan Statistics.](https://www.nature.com/articles/s41467-021-22334-6) Nature Communications, 2021.
 
-The genetic correlation estimation is adapted from `ldsc`, see [Bulik-Sullivan, B., et al. An Atlas of Genetic Correlations across Human Diseases and Traits. Nature Genetics, 2015](https://www.nature.com/articles/ng.3406). 
+Miao, J., Guo, H., Song, G., Zhao, Z., Hou, L., & Lu, Q. (2022). [Quantifying portable genetic effects and improving cross-ancestry genetic prediction with GWAS summary statistics.](https://doi.org/10.1101/2022.05.26.493528) bioRxiv, 2022.2005.2026.493528.
 
-The LD blocks partition is adapted from `LDetect`, see [Berisa, Tomaz, and Joseph K. Pickrell. Approximately independent linkage disequilibrium blocks in human populations. Bioinformatics (2016)](https://academic.oup.com/bioinformatics/article/32/2/283/1743626/).
+The genetic covariance estimation is adapted from `ldsc`, see Bulik-Sullivan, B., et al. [An Atlas of Genetic Correlations across Human Diseases and Traits.](https://www.nature.com/articles/ng.3406) Nature Genetics, 2015. 
+
+The LD blocks partition is adapted from `LDetect`, see Berisa, Tomaz, and Joseph K. Pickrell. [Approximately independent linkage disequilibrium blocks in human populations.](https://academic.oup.com/bioinformatics/article/32/2/283/1743626/) Bioinformatics (2016).
