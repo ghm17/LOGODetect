@@ -1,2 +1,0 @@
-SCZ.txt.gz filter=lfs diff=lfs merge=lfs -text
-BIP.txt.gz filter=lfs diff=lfs merge=lfs -text
