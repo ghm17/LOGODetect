@@ -21,7 +21,9 @@ option_list = list(
   make_option('--out_dir', action = 'store', default = NA, type = 'character'),
   make_option('--n_cores', action = 'store', default = 20, type = 'numeric'),
   make_option('--target_pop', action = 'store', default = NA, type = 'character'),
-  make_option('--n_topregion', action = 'store', default = NA, type = 'numeric')
+  make_option('--n_topregion', action = 'store', default = NA, type = 'numeric'),
+  make_option('--max_nsnps', action = 'store', default = 2000, type = 'integer'),
+  make_option('--interval', action = 'store', default = 20, type = 'integer')
 )
 opt = parse_args(OptionParser(option_list=option_list))
 
@@ -76,8 +78,8 @@ n_topregion = opt$n_topregion
 if(!dir.exists(out_dir)){
   dir.create(out_dir)
 }
-
-
+Cn = opt$max_nsnps
+inter = opt$interval
 
 ############################### QC
 dat1 = dat1[complete.cases(dat1), ]
@@ -376,8 +378,8 @@ gc()
 
 ############################### scan statistic
 n_montecarlo = 5000
-Cn = 2000
-inter = 20
+# Cn = 2000
+# inter = 20
 if(npop == 1){
   theta = c(0.5, 0.55, 0.6, 0.65, 0.7)
 }
