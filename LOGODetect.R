@@ -581,15 +581,17 @@ cal_qmax_1pop = function(bim, geno, n_ref, thre, n_montecarlo, n1, n2, h2_snp_1,
     tab = which(table(bim$segment)>3000)
   }
   tab = which(table(bim$segment)<10)
-  while(length(tab)>0){
-    ind = which(bim$segment == tab[1])
-    if(min(ind) == 1){
-      bim$segment[ind] = bim$segment[max(ind) + 1]
-    }else{
-      bim$segment[ind] = bim$segment[min(ind) - 1]
+  if(max(bim$segment) > 1){
+    while(length(tab)>0){
+      ind = which(bim$segment == tab[1])
+      if(min(ind) == 1){
+        bim$segment[ind] = bim$segment[max(ind) + 1]
+      }else{
+        bim$segment[ind] = bim$segment[min(ind) - 1]
+      }
+      bim$segment = as.numeric(as.factor(bim$segment))
+      tab = which(table(bim$segment)<10)
     }
-    bim$segment = as.numeric(as.factor(bim$segment))
-    tab = which(table(bim$segment)<10)
   }
   segment.partition = bim[, c(2, 7)]
   colnames(segment.partition) = c('SNP', 'segment')
@@ -658,15 +660,17 @@ cal_qmax_2pop = function(bim, geno1, geno2, n_ref1, n_ref2, thre, n_montecarlo, 
     tab = which(table(bim$segment)>3000)
   }
   tab = which(table(bim$segment)<10)
-  while(length(tab)>0){
-    ind = which(bim$segment == tab[1])
-    if(min(ind) == 1){
-      bim$segment[ind] = bim$segment[max(ind) + 1]
-    }else{
-      bim$segment[ind] = bim$segment[min(ind) - 1]
+  if(max(bim$segment) > 1){
+    while(length(tab)>0){
+      ind = which(bim$segment == tab[1])
+      if(min(ind) == 1){
+        bim$segment[ind] = bim$segment[max(ind) + 1]
+      }else{
+        bim$segment[ind] = bim$segment[min(ind) - 1]
+      }
+      bim$segment = as.numeric(as.factor(bim$segment))
+      tab = which(table(bim$segment)<10)
     }
-    bim$segment = as.numeric(as.factor(bim$segment))
-    tab = which(table(bim$segment)<10)
   }
   segment.partition = bim[, c(2, 7)]
   colnames(segment.partition) = c('SNP', 'segment')
