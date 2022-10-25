@@ -41,7 +41,7 @@ conda deactivate
 ```
 where the inputs in order are
 
-* `PATH_TO_SUMSTAT1` and `PATH_TO_SUMSTAT2` (required): Full paths to two GWAS summary statistics, separated by comma.
+* `PATH_TO_SUMSTAT1` and `PATH_TO_SUMSTAT2` (required): Full paths to two GWAS summary statistics (in hg19 genome build), separated by comma.
 ```
     CHR    SNP           BP        A1    A2    BETA       P
     1      rs4074137     1026707   A     C     0.9942     0.7198
