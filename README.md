@@ -34,6 +34,7 @@ Rscript /LOGODetect.R \
 --block_partition PATH_TO_GENOME_PARTITION \
 --out_dir PATH_TO_OUTFILE \
 # The following flags are optional.
+--chr CHR \
 --n_cores N_CORE
 
 conda deactivate
@@ -63,6 +64,7 @@ Or:
 * `PATH_TO_LDSC` (required): Full path to the directory that contains the script of LDSC.
 * `PATH_TO_GENOME_PARTITION` (required): Full path to the genome partition file. Sample data in `./LOGODetect/block_partition.txt` is provided.
 * `PATH_TO_OUTFILE` (required): Full directory to the output regions (and the temporary files). 
+* `CHR` (optional): The chromosome number, perform chromosome-specific analysis if provided.
 * `N_CORE` (optional): Number of cores used in parallel computing. Default is 20. 
 
 ### A concrete example
