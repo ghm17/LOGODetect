@@ -19,6 +19,7 @@ option_list = list(
   make_option('--block_partition', action = 'store', default = NA, type = 'character'),
   make_option('--gc_snp', action = 'store', default = NA, type = 'character'),
   make_option('--out_dir', action = 'store', default = NA, type = 'character'),
+  make_option('--chr', action = 'store', default = NA, type = 'integer'),
   make_option('--n_cores', action = 'store', default = 20, type = 'numeric'),
   make_option('--target_pop', action = 'store', default = NA, type = 'character'),
   make_option('--n_topregion', action = 'store', default = NA, type = 'numeric'),
@@ -31,6 +32,11 @@ opt = parse_args(OptionParser(option_list=option_list))
 sumstats = strsplit(opt$sumstats, ',')[[1]]
 dat1 = data.frame(fread(sumstats[1]))
 dat2 = data.frame(fread(sumstats[2]))
+if(!is.na(opt$chr)){
+  chr = opt$chr
+  dat1 = dat1[dat1$CHR == chr, ]
+  dat2 = dat2[dat2$CHR == chr, ]
+}
 n_gwas = as.numeric(strsplit(opt$n_gwas, ',')[[1]])
 n1 = n_gwas[1]
 n2 = n_gwas[2]
