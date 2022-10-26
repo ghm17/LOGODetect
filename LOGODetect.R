@@ -302,31 +302,44 @@ if(!dir.exists(paste0(out_dir, '/tmp_files/block'))){
 }
 write.table(M, paste0(out_dir, '/tmp_files/block/M.txt'), row.names = F, col.names = F, quote = F)
 if(npop == 1){
+    ldsc_input_check = F
   Read = file(paste0(out_dir, '/tmp_files/ldsc/ldsc_rg.log'), 'r')
-  line = readLines(Read, n = 32)
   line = readLines(Read, n = 1)
-  line = gsub("   ", " ", line)
-  line = gsub("  ", " ", line)
-  line = strsplit(line, ':')[[1]][2]
-  h2_1 = as.numeric(strsplit(line, " ")[[1]][2])
-  line = readLines(Read, n = 7)
-  line = readLines(Read, n = 1)
-  line = gsub("   ", " ", line)
-  line = gsub("  ", " ", line)
-  line = strsplit(line, ':')[[1]][2]
-  h2_2 = as.numeric(strsplit(line, " ")[[1]][2])
-  line = readLines(Read, n = 7)
-  line = readLines(Read, n = 1)
-  line = gsub("   ", " ", line)
-  line = gsub("  ", " ", line)
-  line = strsplit(line, ':')[[1]][2]
-  gcov_total = as.numeric(strsplit(line, " ")[[1]][2])
-  line = readLines(Read, n = 1)
-  line = readLines(Read, n = 1)
-  intercept = as.numeric(strsplit(line, " ")[[1]][2])
+  while(length(line) > 0){
+    if( grepl('Heritability of phenotype 1', line) ){
+      ldsc_input_check = T
+      line = readLines(Read, n = 1)
+      line = readLines(Read, n = 1)
+      line = gsub("   ", " ", line)
+      line = gsub("  ", " ", line)
+      line = strsplit(line, ':')[[1]][2]
+      h2_1 = as.numeric(strsplit(line, " ")[[1]][2])
+    }
+    if( grepl('Heritability of phenotype 2', line) ){
+      line = readLines(Read, n = 1)
+      line = readLines(Read, n = 1)
+      line = gsub("   ", " ", line)
+      line = gsub("  ", " ", line)
+      line = strsplit(line, ':')[[1]][2]
+      h2_2 = as.numeric(strsplit(line, " ")[[1]][2])
+    }
+    if( grepl('Total Observed scale gencov', line) ){
+      line = gsub("   ", " ", line)
+      line = gsub("  ", " ", line)
+      line = strsplit(line, ':')[[1]][2]
+      gcov_total = as.numeric(strsplit(line, " ")[[1]][2])
+      line = readLines(Read, n = 1)
+      line = readLines(Read, n = 1)
+      intercept = as.numeric(strsplit(line, " ")[[1]][2])
+    }
+    line = readLines(Read, n = 1)
+  }
   close(Read)
   h2_snp_1 = h2_1/M
   h2_snp_2 = h2_2/M
+  if(!ldsc_input_check){
+    stop('Error occurs reading heritability estimates from ldsc_rg.log')
+  }
   
   for(block.ind in 1:nrow(block)){
     chr = block$chr[block.ind]
