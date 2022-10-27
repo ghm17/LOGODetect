@@ -645,8 +645,8 @@ cal_qmax_1pop = function(bim, geno, n_ref, thre, n_montecarlo, n1, n2, h2_snp_1,
   S3 = pop_SS[(2*n_montecarlo + 1):(3*n_montecarlo), ]
   T1 = pop_TT[1:n_montecarlo, ]
   T2 = pop_TT[(n_montecarlo + 1):(2*n_montecarlo), ]
-  Z1 = sqrt(n1*h2_snp_1)*T1 + sqrt(1 - h2_snp_1*M - abs(intercept))*S1 + sqrt(abs(intercept))*S3
-  Z2 = sqrt(n2*h2_snp_2)*T2 + sqrt(1 - h2_snp_2*M - abs(intercept))*S2 + sqrt(abs(intercept))*sign(intercept)*S3
+  Z1 = sqrt(n1*h2_snp_1)*T1 + sqrt( max(1 - h2_snp_1*M - abs(intercept), 0) )*S1 + sqrt(abs(intercept))*S3
+  Z2 = sqrt(n2*h2_snp_2)*T2 + sqrt( max(1 - h2_snp_2*M - abs(intercept), 0) )*S2 + sqrt(abs(intercept))*sign(intercept)*S3
   
   sd1 = sd2 = rep(0, n_montecarlo)
   Qmax = matrix(0, nrow = n_montecarlo, ncol = length(theta))
