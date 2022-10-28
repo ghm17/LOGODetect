@@ -302,7 +302,7 @@ if(!dir.exists(paste0(out_dir, '/tmp_files/block'))){
 }
 write.table(M, paste0(out_dir, '/tmp_files/block/M.txt'), row.names = F, col.names = F, quote = F)
 if(npop == 1){
-    ldsc_input_check = F
+  ldsc_input_check = F
   Read = file(paste0(out_dir, '/tmp_files/ldsc/ldsc_rg.log'), 'r')
   line = readLines(Read, n = 1)
   while(length(line) > 0){
@@ -999,13 +999,18 @@ if(npop == 1){
   
   for(j in 1:length(theta)){
     Read = file(paste0(out_dir, '/tmp_files/S-LDSC/LOGODetect_theta_', theta[j], '.log'), 'r')
-    line = readLines(Read, n = 66)
     line = readLines(Read, n = 1)
-    line = gsub("   ", " ", line)
-    line = gsub("  ", " ", line)
-    if(length(line)>0){
-      line = strsplit(line, ':')[[1]][2]
-      gcov[j] = abs(as.numeric(strsplit(line, ' ')[[1]][3]))
+    while(length(line) > 0){
+      if( grepl('Total Observed scale gencov', line) ){
+        line = readLines(Read, n = 1)
+        line = readLines(Read, n = 1)
+        line = gsub("   ", " ", line)
+        line = gsub("  ", " ", line)
+        line = strsplit(line, ':')[[1]][2]
+        print(line)
+        gcov[j] = as.numeric(strsplit(line, ' ')[[1]][3])
+      }
+      line = readLines(Read, n = 1)
     }
     close(Read)
   }
