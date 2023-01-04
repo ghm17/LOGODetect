@@ -994,25 +994,22 @@ if(npop == 1){
       }
       job = paste0('python ', ldsc_dir, '/ldsc.py --rg ', out_dir, '/tmp_files/ldsc/dat1_reformated.sumstats.gz,', out_dir, '/tmp_files/ldsc/dat2_reformated.sumstats.gz --ref-ld-chr ', out_dir, '/tmp_files/S-LDSC/LOGODetect_theta_', theta[j], '_chr --w-ld-chr ', ref_dir, '/ldsc/eur_w_ld_chr/ --out ', out_dir, '/tmp_files/S-LDSC/LOGODetect_theta_', theta[j])
       system(job, ignore.stdout = T)
-    }
-  }
-  
-  for(j in 1:length(theta)){
-    Read = file(paste0(out_dir, '/tmp_files/S-LDSC/LOGODetect_theta_', theta[j], '.log'), 'r')
-    line = readLines(Read, n = 1)
-    while(length(line) > 0){
-      if( grepl('Total Observed scale gencov', line) ){
-        line = readLines(Read, n = 1)
-        line = readLines(Read, n = 1)
-        line = gsub("   ", " ", line)
-        line = gsub("  ", " ", line)
-        line = strsplit(line, ':')[[1]][2]
-        print(line)
-        gcov[j] = as.numeric(strsplit(line, ' ')[[1]][3])
-      }
+      
+      Read = file(paste0(out_dir, '/tmp_files/S-LDSC/LOGODetect_theta_', theta[j], '.log'), 'r')
       line = readLines(Read, n = 1)
+      while(length(line) > 0){
+        if( grepl('Total Observed scale gencov', line) ){
+          line = readLines(Read, n = 1)
+          line = readLines(Read, n = 1)
+          line = gsub("   ", " ", line)
+          line = gsub("  ", " ", line)
+          line = strsplit(line, ':')[[1]][2]
+          gcov[j] = as.numeric(strsplit(line, ' ')[[1]][3])
+        }
+        line = readLines(Read, n = 1)
+      }
+      close(Read)
     }
-    close(Read)
   }
 }
 
