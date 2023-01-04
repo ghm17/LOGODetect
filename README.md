@@ -34,6 +34,8 @@ Rscript /LOGODetect.R \
 --block_partition PATH_TO_GENOME_PARTITION \
 --out_dir PATH_TO_OUTFILE \
 # The following flags are optional.
+--max_nsnps CN \
+--interval INTER \
 --chr CHR \
 --n_cores N_CORE
 
@@ -64,6 +66,8 @@ Or:
 * `PATH_TO_LDSC` (required): Full path to the directory that contains the script of LDSC.
 * `PATH_TO_GENOME_PARTITION` (required): Full path to the genome partition file. Sample data in `./LOGODetect/block_partition.txt` is provided.
 * `PATH_TO_OUTFILE` (required): Full directory to the output regions (and the temporary files). 
+* `CN` (optional): Maximal number of SNPs in a true signal region. Default is 2000 for GWAS with about 5000000 SNPs. 
+* `INTER` (optional): Number of SNPs in an output region will be an integer multiplied by INTER. Default is 20 for GWAS with about 5000000 SNPs. When analyzing GWAS summary statistics with reduced SNP density, the user can re-specify the parameters CN and INTER to save computation time. For example, for analysis restricted to HapMap3 SNPs with about 1000000 SNPs, the user can set CN as 500 and INTER as 5. 
 * `CHR` (optional): The chromosome number, perform chromosome-specific analysis if provided.
 * `N_CORE` (optional): Number of cores used in parallel computing. Default is 20. 
 
