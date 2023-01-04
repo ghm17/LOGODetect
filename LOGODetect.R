@@ -1100,7 +1100,7 @@ if(sum(gcov != 0) > 0){
   }
   write.table(re_merged, paste0(out_dir, '/LOGODetect_regions.txt'), col.names = T, row.names = F, quote = F)
 }else{
-  write.table('No significant region is identified.', paste0(out_dir, '/LOGODetect_regions.txt'), col.names = T, row.names = F, quote = F)
+  write.table('No significant region is identified.', paste0(out_dir, '/LOGODetect_regions.txt'), col.names = F, row.names = F, quote = F)
 }
 
 
