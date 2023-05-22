@@ -951,11 +951,11 @@ for(j in 1:length(theta)){
     }
     p_val = Result[[j]]$pval
     BH = max(which(p_val<=0.05/Result[[j]]$testing_count*c(1:n0)))
-    Result[[j]]$qval = Result[[j]]$pval * Result[[j]]$testing_count / c(1:n0)
+    Result[[j]]$pval_adj = Result[[j]]$pval * Result[[j]]$testing_count / c(1:n0)
     if(BH>0){
-      Result[[j]] = Result[[j]][1:BH, c('chr', 'begin_pos', 'stop_pos', 'stat', 'pval', 'qval')]
+      Result[[j]] = Result[[j]][1:BH, c('chr', 'begin_pos', 'stop_pos', 'stat', 'pval', 'pval_adj')]
       for(i in BH:1){
-        Result[[j]]$qval[i] = min(Result[[j]]$qval[i:BH])
+        Result[[j]]$pval_adj[i] = min(Result[[j]]$pval_adj[i:BH])
       }
     }else{
       Result[[j]] = Result[[j]][1, ][-1, ]
@@ -1094,7 +1094,7 @@ if(sum(gcov != 0) > 0){
           re_merged_chr$stop_pos[nrow(re_merged_chr)] = temp$stop_pos[k]
           re_merged_chr$stat[nrow(re_merged_chr)] = max(re_merged_chr$stat[nrow(re_merged_chr)], temp$stat[k])
           re_merged_chr$pval[nrow(re_merged_chr)] = min(re_merged_chr$pval[nrow(re_merged_chr)], temp$pval[k])
-          re_merged_chr$qval[nrow(re_merged_chr)] = min(re_merged_chr$qval[nrow(re_merged_chr)], temp$qval[k])
+          re_merged_chr$pval_adj[nrow(re_merged_chr)] = min(re_merged_chr$pval_adj[nrow(re_merged_chr)], temp$pval_adj[k])
           k = k + 1
         }else{
           re_merged_chr = rbind(re_merged_chr, temp[k, ])
