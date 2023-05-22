@@ -108,7 +108,7 @@ LOGODetect outputs a whitespace-delimited text file `LOGODetect_regions.txt` in 
 * `stop_pos`: The stopping position of this detected small region.
 * `stat`: The scan statistic value. Positive value means positive local genetic correlation between two traits. 
 * `pval`: The p-value of this detected small region.
-* `qval`: The q-value of this detected small region.
+* `pval_adj`: The adjusted p-value of this detected small region.
 
 We have prepared the example output file for you in `/LOGODetect_data/results/LOGODetect_regions.txt`. 
 
@@ -209,7 +209,7 @@ Rscript /LOGODetect/LOGODetect.R \
   ```bash
   head ./results/LOGODetect/LOGODetect_regions.txt
 
-  chr    begin_pos    stop_pos     stat                pval                   qval
+  chr    begin_pos    stop_pos     stat                pval                   pval_adj
   1      32159588     32175927     13.9007303828433    0.00479904019196161    0.0107599532725034
   1      74992278     75006328     23.659452286243     0.0001999600079984     0.00107756226532471
   1      107872936    107899979    13.5101005165975    0.0017996400719856     0.00492533072332902
@@ -222,7 +222,7 @@ If you use the software of LOGODetect, please cite:
 
 Guo, H., Li, J. J., Lu, Q., Hou, L. [Detecting Local Genetic Correlations with Scan Statistics.](https://www.nature.com/articles/s41467-021-22334-6) Nature Communications, 2021.
 
-Miao, J., Guo, H., Song, G., Zhao, Z., Hou, L., & Lu, Q. (2022). [Quantifying portable genetic effects and improving cross-ancestry genetic prediction with GWAS summary statistics.](https://doi.org/10.1101/2022.05.26.493528) bioRxiv, 2022.2005.2026.493528.
+Miao, J., Guo, H., Song, G., Zhao, Z., Hou, L., & Lu, Q. (2022). [Quantifying portable genetic effects and improving cross-ancestry genetic prediction with GWAS summary statistics.](https://www.nature.com/articles/s41467-023-36544-7) Nature Communications, 2022.
 
 The genetic covariance estimation is adapted from `ldsc`, see Bulik-Sullivan, B., et al. [An Atlas of Genetic Correlations across Human Diseases and Traits.](https://www.nature.com/articles/ng.3406) Nature Genetics, 2015. 
 
