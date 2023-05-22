@@ -222,7 +222,7 @@ If you use the software of LOGODetect, please cite:
 
 Guo, H., Li, J. J., Lu, Q., Hou, L. [Detecting Local Genetic Correlations with Scan Statistics.](https://www.nature.com/articles/s41467-021-22334-6) Nature Communications, 2021.
 
-Miao, J., Guo, H., Song, G., Zhao, Z., Hou, L., & Lu, Q. (2022). [Quantifying portable genetic effects and improving cross-ancestry genetic prediction with GWAS summary statistics.](https://www.nature.com/articles/s41467-023-36544-7) Nature Communications, 2022.
+Miao, J., Guo, H., Song, G., Zhao, Z., Hou, L., & Lu, Q. (2023). [Quantifying portable genetic effects and improving cross-ancestry genetic prediction with GWAS summary statistics.](https://www.nature.com/articles/s41467-023-36544-7) Nature Communications, 2023.
 
 The genetic covariance estimation is adapted from `ldsc`, see Bulik-Sullivan, B., et al. [An Atlas of Genetic Correlations across Human Diseases and Traits.](https://www.nature.com/articles/ng.3406) Nature Genetics, 2015. 
 
