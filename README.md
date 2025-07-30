@@ -62,7 +62,7 @@ Or:
 ```
 * `N1` and `N2` (required): Sample sizes of two GWAS summary statistics, in the same order of the GWAS summary statistics, separated by comma.
 * `PATH_TO_REFERENCE` (required): Full path to the directory that contains the reference genotype data and the pre-computed LD score. 
-* `POPULATION` (required): Population for GWAS sample, currently EUR is allowed. 
+* `POPULATION` (required): Population for GWAS sample, currently EUR/EAS/SAS/AFR/AMR is allowed. 
 * `PATH_TO_LDSC` (required): Full path to the directory that contains the script of LDSC.
 * `PATH_TO_GENOME_PARTITION` (required): Full path to the genome partition file. Sample data in `./LOGODetect/block_partition.txt` is provided.
 * `PATH_TO_OUTFILE` (required): Full directory to the output regions (and the temporary files). 
