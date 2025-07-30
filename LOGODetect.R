@@ -270,7 +270,7 @@ if(npop == 1){
   
   job = paste0('python ', ldsc_dir, '/munge_sumstats.py --sumstats ', out_dir, '/tmp_files/dat1.txt --chunksize 1000000 --out ', out_dir, '/tmp_files/ldsc/dat1_reformated --merge-alleles ', ref_dir, '/ldsc/w_hm3.snplist;
                 python ', ldsc_dir, '/munge_sumstats.py --sumstats ', out_dir, '/tmp_files/dat2.txt --chunksize 1000000 --out ', out_dir, '/tmp_files/ldsc/dat2_reformated --merge-alleles ', ref_dir, '/ldsc/w_hm3.snplist;
-                python ', ldsc_dir, '/ldsc.py --rg ', out_dir, '/tmp_files/ldsc/dat1_reformated.sumstats.gz,', out_dir, '/tmp_files/ldsc/dat2_reformated.sumstats.gz --ref-ld-chr ', ref_dir, '/ldsc/eur_w_ld_chr/ --w-ld-chr ', ref_dir, '/ldsc/eur_w_ld_chr/ --out ', out_dir, '/tmp_files/ldsc/ldsc_rg')
+                python ', ldsc_dir, '/ldsc.py --rg ', out_dir, '/tmp_files/ldsc/dat1_reformated.sumstats.gz,', out_dir, '/tmp_files/ldsc/dat2_reformated.sumstats.gz --ref-ld-chr ', ref_dir, '/ldsc/', pop, '_w_ld_chr/ --w-ld-chr ', ref_dir, '/ldsc/', pop, '_w_ld_chr/ --out ', out_dir, '/tmp_files/ldsc/ldsc_rg')
   system(job, ignore.stdout = T)
 }
 if(npop == 2){
@@ -978,7 +978,7 @@ if(npop == 1){
       re = re[order(re$begin_pos), ]
       re = re[order(re$chr), ]
       for(ch in 1:22){
-        annot = data.frame(fread(paste0(ref_dir, '/ldsc/1000g_eur/1000G_EUR_QC_chr', ch, '.bim')))
+        annot = data.frame(fread(paste0(ref_dir, '/ldsc/1000G_', pop, '/1000G_', pop, '_QC_chr', ch, '.bim')))
         annot = annot[, 1:4]
         colnames(annot) = c('CHR', 'SNP', 'CM', 'BP')
         annot$C0 = 1
@@ -995,10 +995,10 @@ if(npop == 1){
       
       ### S-LDSC
       for(ch in 1:22){
-        job = paste0('python ', ldsc_dir, '/ldsc.py --l2 --bfile ', ref_dir, '/ldsc/1000g_eur/1000G_EUR_QC_chr', ch, ' --ld-wind-cm 1 --annot ', out_dir, '/tmp_files/S-LDSC/LOGODetect_theta_', theta[j], '_chr', ch, '.annot --out ', out_dir, '/tmp_files/S-LDSC/LOGODetect_theta_', theta[j], '_chr', ch, ' --print-snps ', ref_dir, '/ldsc/hapmap3_snps/hm.', ch, '.snp;')
+        job = paste0('python ', ldsc_dir, '/ldsc.py --l2 --bfile ', ref_dir, '/ldsc/1000G_', pop, '/1000G_', pop, '_QC_chr', ch, ' --ld-wind-cm 1 --annot ', out_dir, '/tmp_files/S-LDSC/LOGODetect_theta_', theta[j], '_chr', ch, '.annot --out ', out_dir, '/tmp_files/S-LDSC/LOGODetect_theta_', theta[j], '_chr', ch, ' --print-snps ', ref_dir, '/ldsc/hapmap3_snps/hm.', ch, '.snp;')
         system(job, ignore.stdout = T)
       }
-      job = paste0('python ', ldsc_dir, '/ldsc.py --rg ', out_dir, '/tmp_files/ldsc/dat1_reformated.sumstats.gz,', out_dir, '/tmp_files/ldsc/dat2_reformated.sumstats.gz --ref-ld-chr ', out_dir, '/tmp_files/S-LDSC/LOGODetect_theta_', theta[j], '_chr --w-ld-chr ', ref_dir, '/ldsc/eur_w_ld_chr/ --out ', out_dir, '/tmp_files/S-LDSC/LOGODetect_theta_', theta[j])
+      job = paste0('python ', ldsc_dir, '/ldsc.py --rg ', out_dir, '/tmp_files/ldsc/dat1_reformated.sumstats.gz,', out_dir, '/tmp_files/ldsc/dat2_reformated.sumstats.gz --ref-ld-chr ', out_dir, '/tmp_files/S-LDSC/LOGODetect_theta_', theta[j], '_chr --w-ld-chr ', ref_dir, '/ldsc/', pop, '_w_ld_chr/ --out ', out_dir, '/tmp_files/S-LDSC/LOGODetect_theta_', theta[j])
       system(job, ignore.stdout = T)
       
       Read = file(paste0(out_dir, '/tmp_files/S-LDSC/LOGODetect_theta_', theta[j], '.log'), 'r')
